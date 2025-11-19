@@ -324,7 +324,7 @@ const App: React.FC = () => {
   };
 
   // Dynamic font classes based on language - UNIFIED VT323
-  const isVietnamese = language === 'vi';
+//   const isVietnamese = language === 'vi';
   const bodyFontClass = "font-['VT323',monospace]";
   const headerFontClass = "pixel-font"; // Maps to VT323 via CSS
 
@@ -338,7 +338,7 @@ const App: React.FC = () => {
             <div className="flex flex-col md:block">
                 <h1 className={`hidden md:block ${headerFontClass} text-3xl md:text-4xl text-yellow-400 drop-shadow-[4px_4px_0_rgba(0,0,0,1)]`}>WORDLESS RADAR</h1>
                 <div className="bg-black/60 p-2 md:mt-2 rounded border border-gray-600 backdrop-blur-sm inline-block shadow-md">
-                    <div className="text-blue-300 text-base md:text-xl uppercase truncate">
+                    <div className="text-blue-300 text-xl md:text-2xl uppercase truncate">
                         {t.mission} {currentLevelConfig.level}: <span className="block md:inline">{currentLevelConfig.name}</span>
                     </div>
                     <div className="w-28 md:w-48 h-2 bg-gray-700 rounded-full mt-1 overflow-hidden">
@@ -347,7 +347,7 @@ const App: React.FC = () => {
                             style={{ width: `${Math.min(100, (score / currentLevelConfig.targetScore) * 100)}%` }}
                         />
                     </div>
-                    <div className="text-[10px] md:text-xs text-gray-400 mt-1 text-right">{score} / {currentLevelConfig.targetScore}</div>
+                    <div className="text-lg md:text-xl text-gray-400 mt-1 text-right">{score} / {currentLevelConfig.targetScore}</div>
                 </div>
             </div>
 
@@ -356,9 +356,9 @@ const App: React.FC = () => {
                 <div className="mt-2">
                     <button
                         onClick={handleRegenerate}
-                        className={`px-4 py-2 md:px-5 md:py-3 bg-gray-700 hover:bg-gray-600 text-white font-bold text-base md:text-xl ${headerFontClass} border-2 border-gray-900 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:shadow-none transition-all flex items-center gap-2 group`}
+                        className={`px-4 py-2 md:px-5 md:py-3 bg-gray-700 hover:bg-gray-600 text-white font-bold text-2xl md:text-3xl ${headerFontClass} border-2 border-gray-900 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:shadow-none transition-all flex items-center gap-2 group`}
                     >
-                        <span className="text-base md:text-xl group-hover:rotate-180 transition-transform duration-300">↺</span> 
+                        <span className="text-2xl md:text-3xl group-hover:rotate-180 transition-transform duration-300">↺</span> 
                         {t.rescan}
                     </button>
                 </div>
@@ -376,13 +376,13 @@ const App: React.FC = () => {
                     <div className="flex border-b border-gray-600 h-1/2">
                          <button
                             onClick={toggleLanguage}
-                            className={`flex-1 px-4 py-2 md:px-5 md:py-3 bg-transparent hover:bg-white/10 text-white ${headerFontClass} text-sm md:text-lg border-r border-gray-600 transition-colors`}
+                            className={`flex-1 px-4 py-2 md:px-5 md:py-3 bg-transparent hover:bg-white/10 text-white ${headerFontClass} text-2xl md:text-3xl border-r border-gray-600 transition-colors`}
                         >
                             {language === 'en' ? 'EN' : 'VI'}
                         </button>
                         <button 
                             onClick={() => setShowHelp(true)}
-                            className={`flex-1 px-4 py-2 md:px-5 md:py-3 bg-transparent hover:bg-white/10 text-blue-300 ${headerFontClass} text-sm md:text-lg transition-colors`}
+                            className={`flex-1 px-4 py-2 md:px-5 md:py-3 bg-transparent hover:bg-white/10 text-blue-300 ${headerFontClass} text-2xl md:text-3xl transition-colors`}
                         >
                             ?
                         </button>
@@ -391,7 +391,7 @@ const App: React.FC = () => {
                     {/* Bottom Row: Pause/Settings Button */}
                     <button 
                         onClick={() => setShowMenu(true)}
-                        className={`flex-1 flex items-center justify-center gap-2 bg-yellow-600 hover:bg-yellow-500 text-black hover:text-black ${headerFontClass} text-sm md:text-lg font-bold py-2 md:py-3 transition-colors`}
+                        className={`flex-1 flex items-center justify-center gap-2 bg-yellow-600 hover:bg-yellow-500 text-black hover:text-black ${headerFontClass} text-2xl md:text-3xl font-bold py-2 md:py-3 transition-colors`}
                     >
                         <span className="font-sans font-black tracking-tighter text-xl md:text-2xl">||</span>
                         <span className="hidden md:inline">{t.menu}</span>
@@ -400,8 +400,8 @@ const App: React.FC = () => {
 
                 {/* Right Section: Score */}
                 <div className="flex flex-col items-center justify-center px-4 md:px-6 py-2 md:py-3 min-w-[90px] md:min-w-[120px] bg-black/40">
-                    <div className={`${headerFontClass} text-xs md:text-sm text-gray-400 tracking-widest`}>{t.top}</div>
-                    <div className={`${headerFontClass} text-sm md:text-lg text-yellow-500`}>{topScore}</div>
+                    <div className={`${headerFontClass} text-xl md:text-2xl text-gray-400 tracking-widest`}>{t.top}</div>
+                    <div className={`${headerFontClass} text-xl md:text-2xl text-yellow-500`}>{topScore}</div>
                     <div className="w-full h-px bg-gray-700 my-1"></div>
                     <div className={`${headerFontClass} text-4xl md:text-5xl text-white leading-none`}>
                         {score}
@@ -563,8 +563,8 @@ const App: React.FC = () => {
                     <div className="flex gap-4">
                          <div className="text-5xl">📡</div>
                          <div>
-                            <h3 className="text-white font-bold text-2xl md:text-3xl mb-1">{t.mission}</h3>
-                            <p className="text-lg md:text-xl text-gray-400 whitespace-pre-line leading-relaxed">{t.briefingText}</p>
+                            <h3 className="text-white font-bold text-3xl md:text-4xl mb-1">{t.mission}</h3>
+                            <p className="text-xl md:text-2xl text-gray-400 whitespace-pre-line leading-relaxed">{t.briefingText}</p>
                          </div>
                     </div>
 

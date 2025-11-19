@@ -79,7 +79,7 @@ export const RadioMachine: React.FC<RadioMachineProps> = ({ feedback, timeLeft, 
         
         {/* Antenna - Thinner & Sharper - Taller */}
         <div className="flex flex-col items-center -mb-3 z-0 relative translate-y-1">
-            <div className={`w-2 h-2 rounded-full border border-black relative z-10 ${timeLeft < 10 ? 'bg-red-600 animate-ping' : 'bg-red-500'}`} />
+            <div className={`w-4 h-3 rounded-full border border-black relative z-10 ${timeLeft < 10 ? 'bg-red-600 animate-ping' : 'bg-red-500'}`} />
             <motion.div 
                 className="w-1 bg-gray-400 border-x border-black"
                 style={{ height: 50 }}
@@ -93,13 +93,13 @@ export const RadioMachine: React.FC<RadioMachineProps> = ({ feedback, timeLeft, 
         {/* Dish/Receiver - Bigger Style (w-64 h-32) */}
         <motion.div 
             className={`w-64 h-32 rounded-b-full border-4 border-gray-800 relative overflow-hidden z-10 shadow-lg
-            ${isSuccess ? 'bg-green-500' : isFailure ? 'bg-red-500' : isPartial ? 'bg-yellow-500' : 'bg-slate-700'}
+            ${isSuccess ? 'bg-green-500' : isFailure ? 'bg-red-500' : isPartial ? 'bg-yellow-500' : 'bg-slate-400'}
             `}
             animate={{
-                rotate: isSuccess ? [0, 5, -5, 0] : 0,
+                rotate: isSuccess ? [0, 40, -20, 0] : 0,
                 scale: isSuccess ? [1, 1.05, 1] : 1
             }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.35 }}
         >
             {/* Internal Rings */}
             <div className="absolute inset-0 rounded-b-full border-t-0 border-4 border-black/10 scale-75 origin-top"></div>
@@ -125,7 +125,7 @@ export const RadioMachine: React.FC<RadioMachineProps> = ({ feedback, timeLeft, 
             {/* Main Screen */}
             <div className="w-full h-12 bg-black border-2 border-gray-600 rounded-sm mb-2 flex items-center justify-center overflow-hidden relative shadow-inner">
                 <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(0,255,0,0.1)_1px,transparent_1px)] bg-[length:100%_2px] pointer-events-none" />
-                <div className={`text-green-400 text-sm md:text-base whitespace-nowrap ${fontClass} ${isSuccess || isFailure ? '' : 'animate-marquee'}`}>
+                <div className={`text-green-400 text-lg md:text-xl whitespace-nowrap ${fontClass} ${isSuccess || isFailure ? '' : 'animate-marquee'}`}>
                 {isSuccess ? t.signalVerified : isFailure ? t.errorInvalid : isPartial ? t.ruleViolation : t.awaitingInput}
                 </div>
             </div>
@@ -133,8 +133,8 @@ export const RadioMachine: React.FC<RadioMachineProps> = ({ feedback, timeLeft, 
             {/* Info Panel (Timer + Status) */}
             <div className="flex justify-between items-center bg-gray-800/50 p-2 rounded border border-gray-600/50 mb-3">
                 <div className="flex flex-col">
-                    <span className="text-[10px] text-gray-400 uppercase tracking-wider">System Clock</span>
-                    <div className={`text-red-500 text-2xl leading-none tracking-widest ${fontClass}`}>
+                    <span className="text-lg text-gray-400 uppercase tracking-wider">System Clock</span>
+                    <div className={`text-red-500 text-3xl leading-none tracking-widest ${fontClass}`}>
                         {timeString}
                     </div>
                 </div>
