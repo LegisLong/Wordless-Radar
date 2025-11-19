@@ -55,7 +55,7 @@ const meetsRules = (text: string, rules?: RuleSet): boolean => {
 
 export const fetchSignalBatch = async (
     count: number = 20, 
-    promptContext: string = "",
+    _promptContext: string = "",
     rules: RuleSet | undefined,
     language: Language
 ): Promise<Omit<SignalWord, 'id' | 'x' | 'y' | 'rotation'>[]> => {

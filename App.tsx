@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { RadioMachine } from './components/RadioMachine';
 import { SignalWordItem } from './components/SignalWord';
 import { fetchSignalBatch } from './services/geminiService';

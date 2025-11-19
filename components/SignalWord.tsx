@@ -54,7 +54,7 @@ export const SignalWordItem: React.FC<Props> = ({ word, onDragEnd, isVietnamese 
       whileHover={{ scale: 1.05, cursor: 'grab', zIndex: 50 }}
       whileDrag={{ cursor: 'grabbing', zIndex: 100 }}
       onDragStart={handleDragStart}
-      onDragEnd={(event, info) => {
+      onDragEnd={(_, info) => {
         setIsDragging(false);
         audioService.playDragEnd();
         // Use info.point (pointer position) for accurate drop detection.
