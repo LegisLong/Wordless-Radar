@@ -142,7 +142,7 @@ const App: React.FC = () => {
             const maxY = screenH - CARD_HEIGHT - PADDING - (isMobile ? 60 : 0); // Adjust for bottom controls
 
             // Dynamic Exclusion Zones based on Screen Size
-            const centerRadius = isMobile ? 160 : 260; // Smaller radio exclusion on mobile
+            const centerRadius = isMobile ? 130 : 180; // Smaller radio exclusion (Updated for compact radio)
             const uiTopLeftW = isMobile ? 200 : 360;
             const uiTopLeftH = isMobile ? 120 : 200;
             
@@ -254,7 +254,8 @@ const App: React.FC = () => {
 
     const distance = Math.sqrt(Math.pow(x - radioCenter.x, 2) + Math.pow(y - radioCenter.y, 2));
 
-    const hitRadius = window.innerWidth < 768 ? 110 : 140; // Smaller hit area on mobile due to scale
+    // Adjusted for compact radio size
+    const hitRadius = window.innerWidth < 768 ? 90 : 110;
 
     if (distance < hitRadius) {
       const droppedWord = words.find(w => w.id === id);
