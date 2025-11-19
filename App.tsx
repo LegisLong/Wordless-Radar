@@ -120,7 +120,7 @@ const App: React.FC = () => {
         // Pass language to service
         // Determine count based on device width
         const isMobile = window.innerWidth < 768;
-        const spawnCount = isMobile ? 15 : 20;
+        const spawnCount = isMobile ? 10 : 20;
 
         const newWordsData = await fetchSignalBatch(spawnCount, config.promptContext, config.rules, language);
         const screenW = window.innerWidth;
