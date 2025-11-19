@@ -35,3 +35,38 @@ export interface GameConfig {
   spawnCount: number;
   difficultyMultiplier: number;
 }
+
+export type Language = 'en' | 'vi';
+
+export interface TranslationDictionary {
+  mission: string;
+  score: string;
+  timer: string;
+  signalVerified: string;
+  errorInvalid: string;
+  ruleViolation: string;
+  awaitingInput: string;
+  manual: string;
+  top: string;
+  rescan: string;
+  refreshSignal: string;
+  missionBriefing: string;
+  startMission: string;
+  levelComplete: string;
+  nextFreq: string;
+  secAdded: string;
+  signalLost: string;
+  finalScore: string;
+  levelReached: string;
+  newHighScore: string;
+  reInitialize: string;
+  scanning: string;
+  validSignal: string;
+  validDesc: string;
+  noiseError: string;
+  noiseDesc: string;
+  controls: string;
+  controlsDesc: string;
+  resume: string;
+  briefingText: string;
+}

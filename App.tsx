@@ -1,12 +1,12 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { RadioMachine } from './components/RadioMachine';
 import { SignalWordItem } from './components/SignalWord';
 import { fetchSignalBatch } from './services/geminiService';
 import { audioService } from './services/audioService';
-import { SignalWord, GameState, LevelConfig } from './types';
+import { SignalWord, GameState, LevelConfig, Language } from './types';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LEVELS } from './data/levels';
+import { getLevels } from './data/levels';
+import { getTranslations } from './data/locales';
 
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>(GameState.START);
@@ -16,13 +16,17 @@ const App: React.FC = () => {
   const [levelIndex, setLevelIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
   
-  const [showHelp, setShowHelp] = useState(false); // Help Modal State
+  const [showHelp, setShowHelp] = useState(false); 
+  const [language, setLanguage] = useState<Language>('en');
 
   const [feedback, setFeedback] = useState<'idle' | 'success' | 'failure' | 'partial_failure'>('idle');
   const [message, setMessage] = useState<string>("");
   const radioRef = useRef<HTMLDivElement>(null);
 
-  const currentLevelConfig = LEVELS[levelIndex];
+  // Derived Data based on Language
+  const LEVELS = getLevels(language);
+  const currentLevelConfig = LEVELS[levelIndex] || LEVELS[0];
+  const t = getTranslations(language);
 
   // Initialization
   useEffect(() => {
@@ -32,17 +36,15 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // Timer Logic - Now pauses when showHelp is true
+  // Timer Logic
   useEffect(() => {
     let timer: ReturnType<typeof setInterval>;
     if (gameState === GameState.PLAYING && timeLeft > 0 && !showHelp) {
       timer = setInterval(() => {
         setTimeLeft((prev) => {
-          // Audio tick for last 10 seconds
           if (prev <= 10 && prev > 0) {
              audioService.playTick();
           }
-          
           if (prev <= 1) {
             finishGame();
             return 0;
@@ -55,7 +57,7 @@ const App: React.FC = () => {
   }, [gameState, timeLeft, showHelp]);
 
   const startGame = async () => {
-    audioService.resume(); // Initialize/Resume Audio Context
+    audioService.resume(); 
     audioService.playScan(); 
 
     setWords([]);
@@ -63,7 +65,7 @@ const App: React.FC = () => {
     setLevelIndex(0);
     setTimeLeft(LEVELS[0].duration);
     setGameState(GameState.LOADING);
-    await spawnWords(LEVELS[0], true); // Use replace=true for fresh start
+    await spawnWords(LEVELS[0], true); 
     setGameState(GameState.PLAYING);
   };
 
@@ -74,12 +76,11 @@ const App: React.FC = () => {
         
         audioService.playLevelUp();
         setGameState(GameState.LEVEL_TRANSITION);
-        setWords([]); // Clear old words
+        setWords([]); 
         
-        // Wait a moment for visual transition
         setTimeout(async () => {
             setLevelIndex(nextIdx);
-            setTimeLeft(prev => prev + nextConfig.duration); // Add bonus time
+            setTimeLeft(prev => prev + nextConfig.duration); 
             await spawnWords(nextConfig, true);
             setGameState(GameState.PLAYING);
         }, 2000);
@@ -95,11 +96,10 @@ const App: React.FC = () => {
     }
   };
 
-  // Modified to support replacing words entirely (for Rescan)
   const spawnWords = async (config: LevelConfig, replace: boolean = false) => {
     try {
-        // Fetch 20 signals as requested
-        const newWordsData = await fetchSignalBatch(20, config.promptContext, config.rules);
+        // Pass language to service
+        const newWordsData = await fetchSignalBatch(20, config.promptContext, config.rules, language);
         const screenW = window.innerWidth;
         const screenH = window.innerHeight;
         
@@ -111,12 +111,10 @@ const App: React.FC = () => {
             rotation: (Math.random() * 20) - 10
         }));
         
-        // Collision avoidance with center radio
         const cleanWords = formattedWords.map(w => {
             const centerX = screenW / 2;
             const centerY = screenH / 2;
             const dist = Math.sqrt(Math.pow(w.x - centerX, 2) + Math.pow(w.y - centerY, 2));
-            
             if (dist < 250) {
                 return { ...w, x: w.x < centerX ? w.x - 200 : w.x + 200 };
             }
@@ -127,14 +125,10 @@ const App: React.FC = () => {
              if (replace) {
                  return cleanWords;
              }
-             
-             // Prevent overcrowding: if too many items, remove some old ones to maintain performance
-             // Prioritize keeping words that are valid for the current level
              let current = prev;
              if (current.length > 25) {
                  const valid = current.filter(w => validateWord(w, config) === 'valid');
                  const others = current.filter(w => validateWord(w, config) !== 'valid');
-                 // Keep all valid words, plus a few recent others to act as obstacles
                  current = [...valid, ...others.slice(-8)];
              }
              return [...current, ...cleanWords];
@@ -149,11 +143,9 @@ const App: React.FC = () => {
       
       audioService.playScan();
       setGameState(GameState.LOADING);
-      // Wait a minimal amount of time to let the UI show "SCANNING"
-      // The await spawnWords will naturally take some time due to API/Processing
       await spawnWords(currentLevelConfig, true);
       setGameState(GameState.PLAYING);
-      showMessage("FREQUENCY RESCANNED");
+      showMessage(t.rescan);
   };
 
   const validateWord = (word: SignalWord, config: LevelConfig): 'valid' | 'noise' | 'rule_break' => {
@@ -187,43 +179,36 @@ const App: React.FC = () => {
   };
 
   const processDrop = (word: SignalWord) => {
-    // 1. Update state to remove the processed word
     const remainingWords = words.filter(w => w.id !== word.id);
     setWords(remainingWords);
 
     const result = validateWord(word, currentLevelConfig);
 
-    // 2. Scoring & Feedback
     if (result === 'valid') {
       audioService.playSuccess();
       setScore(s => {
           const newScore = s + 10;
-          // Check level up condition immediately after score update
           if (newScore >= currentLevelConfig.targetScore && levelIndex < LEVELS.length - 1) {
-              setTimeout(nextLevel, 500); // Slight delay so user sees the +10
+              setTimeout(nextLevel, 500); 
           }
           return newScore;
       });
       setFeedback('success');
-      showMessage("+10 SIGNAL MATCH");
+      showMessage(`+10 ${t.signalVerified}`);
     } else if (result === 'rule_break') {
       audioService.playRuleViolation();
       setScore(s => Math.max(0, s - 2));
       setFeedback('partial_failure');
-      showMessage("-2 RULE VIOLATION");
+      showMessage(`-2 ${t.ruleViolation}`);
     } else {
       audioService.playFailure();
       setScore(s => Math.max(0, s - 5));
       setFeedback('failure');
-      showMessage("-5 NOISE DETECTED");
+      showMessage(`-5 ${t.noiseError}`);
     }
 
     setTimeout(() => setFeedback('idle'), 600);
 
-    // 3. Check if we need to refill words
-    // We refill if:
-    // A) Total word count is low (standard behavior)
-    // B) No VALID words are left on screen (anti-frustration feature)
     const validWordsLeft = remainingWords.filter(w => validateWord(w, currentLevelConfig) === 'valid').length;
 
     if ((remainingWords.length <= 3 || validWordsLeft === 0) && gameState === GameState.PLAYING) {
@@ -236,35 +221,51 @@ const App: React.FC = () => {
       setTimeout(() => setMessage(""), 1500);
   };
 
+  const toggleLanguage = () => {
+      setLanguage(prev => prev === 'en' ? 'vi' : 'en');
+      audioService.playDragStart(); // Re-use simple blip
+  }
+
+  // Dynamic font classes based on language
+  const isVietnamese = language === 'vi';
+  const bodyFontClass = isVietnamese ? "font-['Space_Mono']" : "font-['VT323']";
+  const headerFontClass = isVietnamese ? "pixel-font-vi" : "pixel-font";
+
   return (
-    <div className="w-full h-screen overflow-hidden bg-[#1a1a2e] relative select-none font-['VT323']">
+    <div className={`w-full h-screen overflow-hidden bg-[#1a1a2e] relative select-none ${bodyFontClass}`}>
       
       {/* UI Overlay */}
       <div className="absolute top-0 left-0 w-full p-6 flex justify-between items-start z-50 pointer-events-none">
         <div>
-            <h1 className="pixel-font text-2xl text-yellow-400 drop-shadow-[4px_4px_0_rgba(0,0,0,1)]">SEMANTIC RADIO</h1>
+            <h1 className={`${headerFontClass} text-2xl text-yellow-400 drop-shadow-[4px_4px_0_rgba(0,0,0,1)]`}>SEMANTIC RADIO</h1>
             <div className="bg-black/50 p-2 mt-2 rounded border border-gray-600 backdrop-blur-sm inline-block">
-                <div className="text-blue-300 text-lg">LEVEL {currentLevelConfig.level}: {currentLevelConfig.name}</div>
+                <div className="text-blue-300 text-lg uppercase">{t.mission} {currentLevelConfig.level}: {currentLevelConfig.name}</div>
                 <div className="w-48 h-2 bg-gray-700 rounded-full mt-1 overflow-hidden">
                     <div 
                         className="h-full bg-blue-500 transition-all duration-500" 
                         style={{ width: `${Math.min(100, (score / currentLevelConfig.targetScore) * 100)}%` }}
                     />
                 </div>
-                <div className="text-xs text-gray-400 mt-1 text-right">{score} / {currentLevelConfig.targetScore} TO ADVANCE</div>
+                <div className="text-xs text-gray-400 mt-1 text-right">{score} / {currentLevelConfig.targetScore}</div>
             </div>
         </div>
         <div className="text-right pointer-events-auto flex flex-col items-end">
             <div className="flex gap-4 items-start">
+                <button
+                    onClick={toggleLanguage}
+                    className={`px-3 py-1 bg-gray-800 text-white ${headerFontClass} text-xs border-2 border-gray-600 hover:bg-gray-700 transition-all`}
+                >
+                    {language === 'en' ? 'LANG: EN' : 'LANG: VI'}
+                </button>
                 <button 
                     onClick={() => setShowHelp(true)}
-                    className="px-3 py-1 bg-blue-600 text-white pixel-font text-xs border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all"
+                    className={`px-3 py-1 bg-blue-600 text-white ${headerFontClass} text-xs border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all`}
                 >
-                    ? MANUAL
+                    ? {t.manual}
                 </button>
                 <div>
-                    <div className="pixel-font text-sm text-gray-500 mb-1">TOP: {topScore}</div>
-                    <div className="pixel-font text-5xl text-white drop-shadow-[4px_4px_0_rgba(0,0,0,1)]">
+                    <div className={`${headerFontClass} text-sm text-gray-500 mb-1`}>{t.top}: {topScore}</div>
+                    <div className={`${headerFontClass} text-5xl text-white drop-shadow-[4px_4px_0_rgba(0,0,0,1)]`}>
                         {score}
                     </div>
                 </div>
@@ -273,7 +274,7 @@ const App: React.FC = () => {
                 <motion.div 
                     initial={{ opacity: 0, y: 10 }} 
                     animate={{ opacity: 1, y: 0 }}
-                    className={`text-xl font-bold mt-2 ${message.includes('+') ? 'text-green-400' : message.includes('RULE') ? 'text-yellow-400' : 'text-red-400'}`}
+                    className={`text-xl font-bold mt-2 ${message.includes('+') ? 'text-green-400' : message.includes(t.ruleViolation) ? 'text-yellow-400' : 'text-red-400'}`}
                 >
                     {message}
                 </motion.div>
@@ -286,11 +287,11 @@ const App: React.FC = () => {
         <div className="absolute bottom-6 right-6 z-50 pointer-events-auto flex flex-col gap-2 items-end">
             <button
                 onClick={handleRegenerate}
-                className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-bold text-lg pixel-font border-4 border-gray-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:shadow-none transition-all flex items-center gap-2 group"
+                className={`px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-bold text-lg ${headerFontClass} border-4 border-gray-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:shadow-none transition-all flex items-center gap-2 group`}
             >
-                <span className="text-xl group-hover:rotate-180 transition-transform duration-300">↺</span> RESCAN
+                <span className="text-xl group-hover:rotate-180 transition-transform duration-300">↺</span> {t.rescan}
             </button>
-            <span className="text-xs text-gray-500 bg-black/50 px-2 py-1 rounded">REFRESH SIGNAL FEED</span>
+            <span className="text-xs text-gray-500 bg-black/50 px-2 py-1 rounded">{t.refreshSignal}</span>
         </div>
       )}
 
@@ -304,6 +305,8 @@ const App: React.FC = () => {
                 currentLevel={currentLevelConfig.level}
                 rules={currentLevelConfig.rules}
                 score={score}
+                t={t}
+                isVietnamese={isVietnamese}
             />
         </div>
       </div>
@@ -318,40 +321,40 @@ const App: React.FC = () => {
                 >
                     X
                 </button>
-                <h2 className="pixel-font text-2xl text-blue-400 mb-4 border-b border-blue-800 pb-2">OPERATING MANUAL</h2>
+                <h2 className={`${headerFontClass} text-2xl text-blue-400 mb-4 border-b border-blue-800 pb-2`}>{t.manual}</h2>
                 
-                <div className="space-y-4 text-gray-300 font-mono">
+                <div className="space-y-4 text-gray-300">
                     <div className="flex gap-4">
                          <div className="text-4xl">📡</div>
                          <div>
-                            <h3 className="text-white font-bold">THE MISSION</h3>
-                            <p className="text-sm text-gray-400">Filter meaningful human signals from the cosmic noise background.</p>
+                            <h3 className="text-white font-bold">{t.mission}</h3>
+                            <p className="text-sm text-gray-400 whitespace-pre-line">{t.briefingText}</p>
                          </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="bg-black/30 p-3 border border-gray-700">
-                            <div className="text-green-400 font-bold mb-1">VALID SIGNAL</div>
-                            <div className="text-xs">Real words related to science/nature that MATCH the current level rules.</div>
+                            <div className="text-green-400 font-bold mb-1">{t.validSignal}</div>
+                            <div className="text-xs">{t.validDesc}</div>
                             <div className="text-right text-green-500 font-bold mt-1">+10 PTS</div>
                         </div>
                         <div className="bg-black/30 p-3 border border-gray-700">
-                            <div className="text-red-400 font-bold mb-1">NOISE / ERROR</div>
-                            <div className="text-xs">Gibberish, symbols, or words that break the level rules.</div>
+                            <div className="text-red-400 font-bold mb-1">{t.noiseError}</div>
+                            <div className="text-xs">{t.noiseDesc}</div>
                             <div className="text-right text-red-500 font-bold mt-1">-5 PTS</div>
                         </div>
                     </div>
 
                     <div className="bg-yellow-900/20 border border-yellow-700/50 p-3 text-sm">
-                        <strong className="text-yellow-500">CONTROLS:</strong> Drag cards to the central receiver. Use <span className="border border-gray-500 px-1 bg-gray-800 text-xs">RESCAN</span> if no valid signals are visible.
+                        <strong className="text-yellow-500">{t.controls}:</strong> {t.controlsDesc}
                     </div>
                 </div>
 
                 <button 
                     onClick={() => setShowHelp(false)}
-                    className="w-full mt-6 py-3 bg-blue-600 hover:bg-blue-500 text-white pixel-font text-center border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,0.5)] active:translate-y-1 active:shadow-none"
+                    className={`w-full mt-6 py-3 bg-blue-600 hover:bg-blue-500 text-white ${headerFontClass} text-center border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,0.5)] active:translate-y-1 active:shadow-none`}
                 >
-                    RESUME TRANSMISSION
+                    {t.resume}
                 </button>
              </div>
         </div>
@@ -365,22 +368,28 @@ const App: React.FC = () => {
             animate={{ scale: 1, opacity: 1 }}
             className="max-w-md"
           >
-              <h2 className="pixel-font text-4xl text-blue-400 mb-6 leading-relaxed">MISSION<br/>BRIEFING</h2>
-              <p className="font-mono text-lg text-gray-300 mb-8 text-left bg-black/50 p-6 border border-gray-600 rounded">
-                  1. <strong>FILTER</strong> meaningful signals from noise.<br/>
-                  2. <strong>OBEY</strong> the Level Rules (Length, Letters, etc).<br/>
-                  3. <strong>RACE</strong> against the clock.<br/>
-                  <br/>
-                  <span className="text-green-400">MATCH</span> = +10 Points + Level Progress<br/>
-                  <span className="text-yellow-400">BAD MATCH</span> = -2 Points<br/>
-                  <span className="text-red-400">NOISE</span> = -5 Points
+              <h2 className={`${headerFontClass} text-4xl text-blue-400 mb-6 leading-relaxed whitespace-pre-line`}>{t.missionBriefing}</h2>
+              <p className="text-lg text-gray-300 mb-8 text-left bg-black/50 p-6 border border-gray-600 rounded whitespace-pre-line">
+                  {t.briefingText}
+                  <br/><br/>
+                  <span className="text-green-400">MATCH</span> = +10<br/>
+                  <span className="text-yellow-400">BAD MATCH</span> = -2<br/>
+                  <span className="text-red-400">NOISE</span> = -5
               </p>
-              <button 
-                onClick={startGame}
-                className="px-8 py-4 bg-yellow-400 hover:bg-yellow-300 text-black font-bold text-xl pixel-font border-4 border-black shadow-[6px_6px_0px_0px_rgba(255,255,255,0.5)] active:translate-y-1 active:shadow-none transition-all"
-              >
-                  START MISSION
-              </button>
+              <div className="flex gap-4 justify-center">
+                  <button 
+                    onClick={startGame}
+                    className={`px-8 py-4 bg-yellow-400 hover:bg-yellow-300 text-black font-bold text-xl ${headerFontClass} border-4 border-black shadow-[6px_6px_0px_0px_rgba(255,255,255,0.5)] active:translate-y-1 active:shadow-none transition-all`}
+                  >
+                      {t.startMission}
+                  </button>
+                  <button 
+                      onClick={toggleLanguage}
+                      className={`px-4 py-4 bg-gray-800 hover:bg-gray-700 text-white font-bold text-xl ${headerFontClass} border-4 border-black transition-all`}
+                  >
+                      {language === 'en' ? 'EN' : 'VI'}
+                  </button>
+              </div>
           </motion.div>
         </div>
       )}
@@ -388,9 +397,9 @@ const App: React.FC = () => {
       {/* Level Transition Screen */}
       {gameState === GameState.LEVEL_TRANSITION && (
           <div className="absolute inset-0 z-50 bg-green-900/90 flex flex-col items-center justify-center text-center backdrop-blur-md">
-               <h2 className="pixel-font text-4xl text-white mb-4 animate-pulse">LEVEL COMPLETE</h2>
-               <div className="text-2xl text-green-300 font-mono mb-8">TUNING TO NEXT FREQUENCY...</div>
-               <div className="text-xl text-white">+ {LEVELS[levelIndex + 1]?.duration} SECONDS ADDED</div>
+               <h2 className={`${headerFontClass} text-4xl text-white mb-4 animate-pulse`}>{t.levelComplete}</h2>
+               <div className="text-2xl text-green-300 mb-8">{t.nextFreq}</div>
+               <div className="text-xl text-white">+ {LEVELS[levelIndex + 1]?.duration} {t.secAdded}</div>
           </div>
       )}
 
@@ -402,19 +411,19 @@ const App: React.FC = () => {
                 animate={{ y: 0, opacity: 1 }}
                 className="border-4 border-white p-8 bg-[#1a1a2e]"
             >
-                <h2 className="pixel-font text-3xl text-red-500 mb-4">SIGNAL LOST</h2>
+                <h2 className={`${headerFontClass} text-3xl text-red-500 mb-4`}>{t.signalLost}</h2>
                 <div className="flex flex-col gap-4 mb-8">
-                    <div className="text-2xl text-white font-mono">FINAL SCORE: <span className="text-yellow-400">{score}</span></div>
-                    <div className="text-xl text-gray-400 font-mono">LEVEL REACHED: {currentLevelConfig.level}</div>
+                    <div className="text-2xl text-white">{t.finalScore}: <span className="text-yellow-400">{score}</span></div>
+                    <div className="text-xl text-gray-400">{t.levelReached}: {currentLevelConfig.level}</div>
                     {score >= topScore && score > 0 && (
-                        <div className="text-green-400 pixel-font animate-pulse mt-2">NEW HIGH SCORE!</div>
+                        <div className="text-green-400 animate-pulse mt-2">{t.newHighScore}</div>
                     )}
                 </div>
                 <button 
                     onClick={startGame}
-                    className="px-8 py-3 bg-blue-500 hover:bg-blue-400 text-white font-bold text-lg pixel-font border-4 border-black shadow-[4px_4px_0px_0px_rgba(255,255,255,0.3)] active:translate-y-1 active:shadow-none"
+                    className={`px-8 py-3 bg-blue-500 hover:bg-blue-400 text-white font-bold text-lg ${headerFontClass} border-4 border-black shadow-[4px_4px_0px_0px_rgba(255,255,255,0.3)] active:translate-y-1 active:shadow-none`}
                 >
-                    RE-INITIALIZE
+                    {t.reInitialize}
                 </button>
             </motion.div>
         </div>
@@ -423,7 +432,7 @@ const App: React.FC = () => {
       {/* Loading State */}
       {gameState === GameState.LOADING && (
            <div className="absolute inset-0 z-50 bg-black/60 flex items-center justify-center">
-               <div className="pixel-font text-2xl text-white animate-pulse">SCANNING ETHER...</div>
+               <div className={`${headerFontClass} text-2xl text-white animate-pulse`}>{t.scanning}</div>
            </div>
       )}
 
@@ -432,7 +441,7 @@ const App: React.FC = () => {
         <AnimatePresence>
             {words.map((word) => (
                 <div key={word.id} className="pointer-events-auto inline-block">
-                    <SignalWordItem word={word} onDragEnd={handleWordDrop} />
+                    <SignalWordItem word={word} onDragEnd={handleWordDrop} isVietnamese={isVietnamese} />
                 </div>
             ))}
         </AnimatePresence>

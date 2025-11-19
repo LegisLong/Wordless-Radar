@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RuleSet } from '../types';
+import { RuleSet, TranslationDictionary } from '../types';
 
 interface RadioMachineProps {
   onDrop: (item: any) => void;
@@ -9,9 +9,11 @@ interface RadioMachineProps {
   currentLevel: number;
   rules: RuleSet;
   score: number;
+  t: TranslationDictionary;
+  isVietnamese: boolean;
 }
 
-export const RadioMachine: React.FC<RadioMachineProps> = ({ feedback, timeLeft, currentLevel, rules, score }) => {
+export const RadioMachine: React.FC<RadioMachineProps> = ({ feedback, timeLeft, currentLevel, rules, score, t, isVietnamese }) => {
   const [shake, setShake] = useState(0);
 
   useEffect(() => {
@@ -25,6 +27,9 @@ export const RadioMachine: React.FC<RadioMachineProps> = ({ feedback, timeLeft, 
   const isSuccess = feedback === 'success';
   const isFailure = feedback === 'failure';
   const isPartial = feedback === 'partial_failure';
+  
+  const fontClass = isVietnamese ? "font-['Space_Mono']" : "font-mono";
+  const headerFontClass = isVietnamese ? "pixel-font-vi" : "pixel-font";
 
   // Format time mm:ss
   const minutes = Math.floor(timeLeft / 60);
@@ -39,15 +44,15 @@ export const RadioMachine: React.FC<RadioMachineProps> = ({ feedback, timeLeft, 
         initial={{ x: -50, opacity: 0, rotate: -5 }}
         animate={{ x: 0, opacity: 1, rotate: -5 }}
         key={currentLevel} // Re-animate on level change
-        className="absolute -left-48 top-10 w-48 bg-yellow-100 text-black p-4 shadow-[4px_4px_0px_rgba(0,0,0,0.5)] transform -rotate-6 z-30 font-mono text-sm border border-gray-400"
+        className={`absolute -left-48 top-10 w-48 bg-yellow-100 text-black p-4 shadow-[4px_4px_0px_rgba(0,0,0,0.5)] transform -rotate-6 z-30 text-sm border border-gray-400 ${fontClass}`}
       >
-        <div className="border-b-2 border-red-500/50 mb-2 pb-1 font-bold text-red-800">
-            MISSION: LEVEL {currentLevel}
+        <div className="border-b-2 border-red-500/50 mb-2 pb-1 font-bold text-red-800 uppercase">
+            {t.mission}: {currentLevel}
         </div>
         <ul className="list-disc pl-4 space-y-1 text-xs font-bold text-gray-800">
             <li>{rules.description}</li>
             {rules.excludeChar && <li className="text-red-600">AVOID: "{rules.excludeChar.toUpperCase()}"</li>}
-            <li className="text-blue-800">SCORE: {score}</li>
+            <li className="text-blue-800 uppercase">{t.score}: {score}</li>
         </ul>
         <div className="absolute -top-3 left-1/2 w-4 h-4 rounded-full bg-red-500/50 shadow-inner" />
       </motion.div>
@@ -87,16 +92,16 @@ export const RadioMachine: React.FC<RadioMachineProps> = ({ feedback, timeLeft, 
         {/* Main Screen */}
         <div className="w-full h-14 bg-green-900 border-2 border-black mb-3 flex items-center justify-center overflow-hidden relative">
             <div className="absolute inset-0 bg-[linear-gradient(transparent_1px,_#000_1px)] bg-[length:100%_2px] opacity-20 pointer-events-none" />
-            <div className={`font-mono text-green-400 text-xs whitespace-nowrap ${isSuccess || isFailure ? '' : 'animate-marquee'}`}>
-               {isSuccess ? "SIGNAL VERIFIED" : isFailure ? "ERROR: INVALID DATA" : isPartial ? "RULE VIOLATION" : "AWAITING INPUT... ... ..."}
+            <div className={`text-green-400 text-xs whitespace-nowrap ${fontClass} ${isSuccess || isFailure ? '' : 'animate-marquee'}`}>
+               {isSuccess ? t.signalVerified : isFailure ? t.errorInvalid : isPartial ? t.ruleViolation : t.awaitingInput}
             </div>
         </div>
 
         {/* Timer Screen */}
         <div className="w-full flex justify-between items-end px-1 mb-2">
              <div className="flex flex-col">
-                <span className="text-[8px] text-white font-bold pixel-font mb-1">TIMER</span>
-                <div className="bg-black border border-gray-600 px-2 py-1 rounded text-red-500 font-mono text-xl tracking-widest shadow-inner">
+                <span className={`text-[8px] text-white font-bold mb-1 ${headerFontClass}`}>{t.timer}</span>
+                <div className={`bg-black border border-gray-600 px-2 py-1 rounded text-red-500 text-xl tracking-widest shadow-inner ${fontClass}`}>
                     {timeString}
                 </div>
              </div>

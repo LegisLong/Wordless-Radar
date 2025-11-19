@@ -7,6 +7,7 @@ import { audioService } from '../services/audioService';
 interface Props {
   word: SignalWordType;
   onDragEnd: (id: string, x: number, y: number, r: number) => void;
+  isVietnamese: boolean;
 }
 
 const glitchVariants: Variants = {
@@ -28,7 +29,7 @@ const glitchVariants: Variants = {
   }
 };
 
-export const SignalWordItem: React.FC<Props> = ({ word, onDragEnd }) => {
+export const SignalWordItem: React.FC<Props> = ({ word, onDragEnd, isVietnamese }) => {
   const controls = useDragControls();
   const [isDragging, setIsDragging] = useState(false);
 
@@ -72,7 +73,7 @@ export const SignalWordItem: React.FC<Props> = ({ word, onDragEnd }) => {
         left: 0,
         top: 0,
         color: '#22d3ee', // Cyan-400
-        fontFamily: '"VT323", monospace',
+        fontFamily: isVietnamese ? '"Space Mono", monospace' : '"VT323", monospace',
         // Retro scanline effect
         backgroundImage: 'repeating-linear-gradient(transparent 0px, transparent 2px, rgba(34, 211, 238, 0.1) 3px)',
       }}

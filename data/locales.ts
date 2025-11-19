@@ -1,0 +1,71 @@
+import { TranslationDictionary, Language } from "../types";
+
+const en: TranslationDictionary = {
+  mission: "MISSION",
+  score: "SCORE",
+  timer: "TIMER",
+  signalVerified: "SIGNAL VERIFIED",
+  errorInvalid: "ERROR: INVALID DATA",
+  ruleViolation: "RULE VIOLATION",
+  awaitingInput: "AWAITING INPUT...",
+  manual: "MANUAL",
+  top: "TOP",
+  rescan: "RESCAN",
+  refreshSignal: "REFRESH SIGNAL FEED",
+  missionBriefing: "MISSION\nBRIEFING",
+  startMission: "START MISSION",
+  levelComplete: "LEVEL COMPLETE",
+  nextFreq: "TUNING TO NEXT FREQUENCY...",
+  secAdded: "SECONDS ADDED",
+  signalLost: "SIGNAL LOST",
+  finalScore: "FINAL SCORE",
+  levelReached: "LEVEL REACHED",
+  newHighScore: "NEW HIGH SCORE!",
+  reInitialize: "RE-INITIALIZE",
+  scanning: "SCANNING ETHER...",
+  validSignal: "VALID SIGNAL",
+  validDesc: "Real words related to science/nature that MATCH the current level rules.",
+  noiseError: "NOISE / ERROR",
+  noiseDesc: "Gibberish, symbols, or words that break the level rules.",
+  controls: "CONTROLS",
+  controlsDesc: "Drag cards to the central receiver. Use RESCAN if no valid signals are visible.",
+  resume: "RESUME TRANSMISSION",
+  briefingText: "1. FILTER meaningful signals from noise.\n2. OBEY the Level Rules.\n3. RACE against the clock."
+};
+
+const vi: TranslationDictionary = {
+  mission: "NHIỆM VỤ",
+  score: "ĐIỂM",
+  timer: "THỜI GIAN",
+  signalVerified: "TÍN HIỆU CHÍNH XÁC",
+  errorInvalid: "LỖI: DỮ LIỆU SAI",
+  ruleViolation: "VI PHẠM QUY TẮC",
+  awaitingInput: "ĐANG CHỜ TÍN HIỆU...",
+  manual: "HƯỚNG DẪN",
+  top: "CAO NHẤT",
+  rescan: "QUÉT LẠI",
+  refreshSignal: "LÀM MỚI TÍN HIỆU",
+  missionBriefing: "TRIỂN KHAI\nNHIỆM VỤ",
+  startMission: "BẮT ĐẦU",
+  levelComplete: "HOÀN THÀNH CẤP ĐỘ",
+  nextFreq: "ĐANG DÒ TẦN SỐ MỚI...",
+  secAdded: "GIÂY ĐƯỢC THÊM",
+  signalLost: "MẤT TÍN HIỆU",
+  finalScore: "ĐIỂM TỔNG KẾT",
+  levelReached: "CẤP ĐỘ",
+  newHighScore: "KỶ LỤC MỚI!",
+  reInitialize: "KHỞI ĐỘNG LẠI",
+  scanning: "ĐANG QUÉT SÓNG...",
+  validSignal: "TÍN HIỆU CHUẨN",
+  validDesc: "Từ có nghĩa liên quan đến khoa học/tự nhiên và ĐÚNG quy tắc cấp độ.",
+  noiseError: "NHIỄU / LỖI",
+  noiseDesc: "Ký tự vô nghĩa hoặc từ vi phạm quy tắc.",
+  controls: "ĐIỀU KHIỂN",
+  controlsDesc: "Kéo thẻ vào máy thu. Dùng QUÉT LẠI nếu không thấy tín hiệu tốt.",
+  resume: "TIẾP TỤC",
+  briefingText: "1. LỌC tín hiệu có nghĩa khỏi nhiễu.\n2. TUÂN THỦ quy tắc cấp độ.\n3. CHẠY ĐUA với thời gian."
+};
+
+export const getTranslations = (lang: Language): TranslationDictionary => {
+  return lang === 'vi' ? vi : en;
+};

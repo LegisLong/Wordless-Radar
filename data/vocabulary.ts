@@ -1,6 +1,6 @@
 
 // Expanded vocabulary for fallback/mock mode
-export const SEMANTIC_VOCABULARY = [
+export const SEMANTIC_VOCABULARY_EN = [
   "Galaxy", "Nebula", "Quantum", "Frequency", "Horizon", "Starlight", 
   "Cosmos", "Gravity", "Eclipse", "Meteor", "Pulsar", "Quasar", 
   "Orbit", "Vacuum", "Entropy", "Fusion", "Plasma", "Vortex",
@@ -17,3 +17,23 @@ export const SEMANTIC_VOCABULARY = [
   "Code", "Data", "Byte", "Node", "Link", "Grid", "Mesh", "Net",
   "Zero", "One", "Alpha", "Omega", "Prime", "Core", "Base", "Root"
 ];
+
+export const SEMANTIC_VOCABULARY_VI = [
+  "VũTrụ", "ThiênHà", "Sao", "ÁnhSáng", "BóngTối", "ThờiGian",
+  "KhôngGian", "TráiĐất", "MặtTrời", "MặtTrăng", "Sóng", "ÂmThanh",
+  "TínHiệu", "KếtNối", "TươngLai", "QuáKhứ", "KýỨc", "Mơ",
+  "HyVọng", "ConNgười", "SựSống", "NăngLượng", "NguyênTử", "Lực",
+  "TrọngLực", "VôCực", "HưVô", "HuyềnBí", "CôngNghệ", "MáyMóc",
+  "ĐiệnTử", "DữLiệu", "MãHóa", "BíMật", "HànhTinh", "VệTinh",
+  "ThiênThạch", "Bão", "Gió", "Lửa", "Nước", "Đất", "Khí",
+  "SinhHọc", "TếBào", "Gen", "TiếnHóa", "TríTuệ", "CảmXúc",
+  "HạnhPhúc", "TựDo", "HòaBình", "ChiếnTranh", "HủyDiệt", "TáiSinh",
+  "VĩnhCửu", "KhoảnhKhắc", "NhịpĐiệu", "TầnSố", "VôTuyến", "VệTinh",
+  "LỗĐen", "QuangPhổ", "TừTrường", "ĐiệnÁp", "ViMạch", "RôBốt",
+  "MạngLưới", "ThôngTin", "SángTạo", "KhámPhá", "HànhTrình", "ĐíchĐến",
+  "KhởiĐầu", "KếtThúc", "VòngLặp", "MaTrận", "ẢoẢnh", "ChânLý"
+];
+
+export const getVocabulary = (lang: 'en' | 'vi') => {
+    return lang === 'vi' ? SEMANTIC_VOCABULARY_VI : SEMANTIC_VOCABULARY_EN;
+}

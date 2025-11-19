@@ -1,7 +1,7 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { SignalWord, RuleSet } from "../types";
-import { SEMANTIC_VOCABULARY } from "../data/vocabulary";
+import { SignalWord, RuleSet, Language } from "../types";
+import { getVocabulary } from "../data/vocabulary";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
@@ -59,7 +59,8 @@ const meetsRules = (text: string, rules?: RuleSet): boolean => {
 export const fetchSignalBatch = async (
     count: number = 20, 
     promptContext: string = "",
-    rules?: RuleSet
+    rules: RuleSet | undefined,
+    language: Language
 ): Promise<Omit<SignalWord, 'id' | 'x' | 'y' | 'rotation'>[]> => {
   
   // We want a mix of approx 45% semantic words and 55% noise
@@ -71,9 +72,17 @@ export const fetchSignalBatch = async (
   // 1. Try to get Semantic Words from Gemini with Context
   if (process.env.API_KEY) {
     try {
-      const prompt = `Generate a JSON list of ${semanticCount} distinct, evocative English words related to science, space, technology, or nature. 
+      const langInstruction = language === 'vi' 
+        ? "Output strictly in VIETNAMESE language." 
+        : "Output strictly in ENGLISH language.";
+      
+      const topic = language === 'vi' 
+        ? "science, space, technology, or nature" 
+        : "science, space, technology, or nature";
+
+      const prompt = `Generate a JSON list of ${semanticCount} distinct, evocative ${langInstruction} words related to ${topic}. 
       ${promptContext ? `CRITICAL CONSTRAINT: ${promptContext}` : ''}
-      They must be single words. No noise or gibberish, only real dictionary words.`;
+      They must be single words. No noise or gibberish, only real dictionary words. Do not include English words if asking for Vietnamese.`;
 
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
@@ -108,7 +117,8 @@ export const fetchSignalBatch = async (
   }
 
   // 2. Fill remaining semantic slots with vocabulary (Fallback logic)
-  const shuffledVocab = [...SEMANTIC_VOCABULARY].sort(() => Math.random() - 0.5);
+  const vocabList = getVocabulary(language);
+  const shuffledVocab = [...vocabList].sort(() => Math.random() - 0.5);
   let vocabIndex = 0;
   
   // Try to find words that match the rules
@@ -125,7 +135,6 @@ export const fetchSignalBatch = async (
 
   // If we STILL don't have enough (e.g. very strict rules and no API), fill with random vocab
   // even if they break rules, so at least the game doesn't crash/hang.
-  // The player will just have to avoid them.
   vocabIndex = 0;
   while (items.length < semanticCount) {
     const text = shuffledVocab[vocabIndex % shuffledVocab.length];
@@ -135,7 +144,7 @@ export const fetchSignalBatch = async (
     vocabIndex++;
   }
 
-  // 3. Generate Nasty Noise Words Locally
+  // 3. Generate Nasty Noise Words Locally (Noise is language agnostic usually, or purely machine code)
   for (let i = 0; i < noiseCount; i++) {
     items.push({
         text: generateNoiseWord(),
