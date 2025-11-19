@@ -1,57 +1,12 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { RadioMachine } from './components/RadioMachine';
 import { SignalWordItem } from './components/SignalWord';
 import { fetchSignalBatch } from './services/geminiService';
+import { audioService } from './services/audioService';
 import { SignalWord, GameState, LevelConfig } from './types';
 import { motion, AnimatePresence } from 'framer-motion';
-
-const LEVELS: LevelConfig[] = [
-  {
-    level: 1,
-    name: "CALIBRATION",
-    targetScore: 50,
-    duration: 60,
-    rules: {
-      description: "ANY meaningful word",
-    },
-    promptContext: ""
-  },
-  {
-    level: 2,
-    name: "NARROW BAND",
-    targetScore: 120,
-    duration: 45,
-    rules: {
-      minLength: 5,
-      description: "Meaningful & Length > 4",
-    },
-    promptContext: "Words must be at least 5 letters long."
-  },
-  {
-    level: 3,
-    name: "COMPLEX FILTER",
-    targetScore: 200,
-    duration: 45,
-    rules: {
-      minLength: 6,
-      includeChar: 'r',
-      description: "Length > 5 & Contains 'R'",
-    },
-    promptContext: "Words must be at least 6 letters long AND contain the letter 'r'."
-  },
-  {
-    level: 4,
-    name: "SILENT MODE",
-    targetScore: 9999, // Endless for now
-    duration: 45,
-    rules: {
-      minLength: 4,
-      excludeChar: 'e',
-      description: "Meaningful & NO letter 'E'",
-    },
-    promptContext: "Words must NOT contain the letter 'e'."
-  }
-];
+import { LEVELS } from './data/levels';
 
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>(GameState.START);
@@ -61,6 +16,8 @@ const App: React.FC = () => {
   const [levelIndex, setLevelIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
   
+  const [showHelp, setShowHelp] = useState(false); // Help Modal State
+
   const [feedback, setFeedback] = useState<'idle' | 'success' | 'failure' | 'partial_failure'>('idle');
   const [message, setMessage] = useState<string>("");
   const radioRef = useRef<HTMLDivElement>(null);
@@ -75,12 +32,17 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // Timer Logic
+  // Timer Logic - Now pauses when showHelp is true
   useEffect(() => {
     let timer: ReturnType<typeof setInterval>;
-    if (gameState === GameState.PLAYING && timeLeft > 0) {
+    if (gameState === GameState.PLAYING && timeLeft > 0 && !showHelp) {
       timer = setInterval(() => {
         setTimeLeft((prev) => {
+          // Audio tick for last 10 seconds
+          if (prev <= 10 && prev > 0) {
+             audioService.playTick();
+          }
+          
           if (prev <= 1) {
             finishGame();
             return 0;
@@ -90,9 +52,12 @@ const App: React.FC = () => {
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [gameState, timeLeft]);
+  }, [gameState, timeLeft, showHelp]);
 
   const startGame = async () => {
+    audioService.resume(); // Initialize/Resume Audio Context
+    audioService.playScan(); 
+
     setWords([]);
     setScore(0);
     setLevelIndex(0);
@@ -107,6 +72,7 @@ const App: React.FC = () => {
         const nextIdx = levelIndex + 1;
         const nextConfig = LEVELS[nextIdx];
         
+        audioService.playLevelUp();
         setGameState(GameState.LEVEL_TRANSITION);
         setWords([]); // Clear old words
         
@@ -121,6 +87,7 @@ const App: React.FC = () => {
   };
 
   const finishGame = () => {
+    audioService.playGameOver();
     setGameState(GameState.GAME_OVER);
     if (score > topScore) {
       setTopScore(score);
@@ -180,6 +147,7 @@ const App: React.FC = () => {
   const handleRegenerate = async () => {
       if (gameState !== GameState.PLAYING) return;
       
+      audioService.playScan();
       setGameState(GameState.LOADING);
       // Wait a minimal amount of time to let the UI show "SCANNING"
       // The await spawnWords will naturally take some time due to API/Processing
@@ -227,6 +195,7 @@ const App: React.FC = () => {
 
     // 2. Scoring & Feedback
     if (result === 'valid') {
+      audioService.playSuccess();
       setScore(s => {
           const newScore = s + 10;
           // Check level up condition immediately after score update
@@ -238,10 +207,12 @@ const App: React.FC = () => {
       setFeedback('success');
       showMessage("+10 SIGNAL MATCH");
     } else if (result === 'rule_break') {
+      audioService.playRuleViolation();
       setScore(s => Math.max(0, s - 2));
       setFeedback('partial_failure');
       showMessage("-2 RULE VIOLATION");
     } else {
+      audioService.playFailure();
       setScore(s => Math.max(0, s - 5));
       setFeedback('failure');
       showMessage("-5 NOISE DETECTED");
@@ -283,10 +254,20 @@ const App: React.FC = () => {
                 <div className="text-xs text-gray-400 mt-1 text-right">{score} / {currentLevelConfig.targetScore} TO ADVANCE</div>
             </div>
         </div>
-        <div className="text-right pointer-events-auto">
-            <div className="pixel-font text-sm text-gray-500 mb-1">TOP: {topScore}</div>
-            <div className="pixel-font text-5xl text-white drop-shadow-[4px_4px_0_rgba(0,0,0,1)]">
-                {score}
+        <div className="text-right pointer-events-auto flex flex-col items-end">
+            <div className="flex gap-4 items-start">
+                <button 
+                    onClick={() => setShowHelp(true)}
+                    className="px-3 py-1 bg-blue-600 text-white pixel-font text-xs border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all"
+                >
+                    ? MANUAL
+                </button>
+                <div>
+                    <div className="pixel-font text-sm text-gray-500 mb-1">TOP: {topScore}</div>
+                    <div className="pixel-font text-5xl text-white drop-shadow-[4px_4px_0_rgba(0,0,0,1)]">
+                        {score}
+                    </div>
+                </div>
             </div>
             {message && (
                 <motion.div 
@@ -301,7 +282,7 @@ const App: React.FC = () => {
       </div>
 
       {/* Controls Bottom Right */}
-      {gameState === GameState.PLAYING && (
+      {gameState === GameState.PLAYING && !showHelp && (
         <div className="absolute bottom-6 right-6 z-50 pointer-events-auto flex flex-col gap-2 items-end">
             <button
                 onClick={handleRegenerate}
@@ -326,6 +307,55 @@ const App: React.FC = () => {
             />
         </div>
       </div>
+
+      {/* Help/Manual Modal */}
+      {showHelp && (
+        <div className="absolute inset-0 z-[100] bg-black/80 flex items-center justify-center p-4 backdrop-blur-md">
+             <div className="bg-[#1a1a2e] border-4 border-blue-500 p-6 max-w-lg w-full shadow-[0_0_50px_rgba(59,130,246,0.3)] relative">
+                <button 
+                    onClick={() => setShowHelp(false)}
+                    className="absolute top-2 right-2 text-blue-500 hover:text-white font-bold text-xl px-2"
+                >
+                    X
+                </button>
+                <h2 className="pixel-font text-2xl text-blue-400 mb-4 border-b border-blue-800 pb-2">OPERATING MANUAL</h2>
+                
+                <div className="space-y-4 text-gray-300 font-mono">
+                    <div className="flex gap-4">
+                         <div className="text-4xl">📡</div>
+                         <div>
+                            <h3 className="text-white font-bold">THE MISSION</h3>
+                            <p className="text-sm text-gray-400">Filter meaningful human signals from the cosmic noise background.</p>
+                         </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-black/30 p-3 border border-gray-700">
+                            <div className="text-green-400 font-bold mb-1">VALID SIGNAL</div>
+                            <div className="text-xs">Real words related to science/nature that MATCH the current level rules.</div>
+                            <div className="text-right text-green-500 font-bold mt-1">+10 PTS</div>
+                        </div>
+                        <div className="bg-black/30 p-3 border border-gray-700">
+                            <div className="text-red-400 font-bold mb-1">NOISE / ERROR</div>
+                            <div className="text-xs">Gibberish, symbols, or words that break the level rules.</div>
+                            <div className="text-right text-red-500 font-bold mt-1">-5 PTS</div>
+                        </div>
+                    </div>
+
+                    <div className="bg-yellow-900/20 border border-yellow-700/50 p-3 text-sm">
+                        <strong className="text-yellow-500">CONTROLS:</strong> Drag cards to the central receiver. Use <span className="border border-gray-500 px-1 bg-gray-800 text-xs">RESCAN</span> if no valid signals are visible.
+                    </div>
+                </div>
+
+                <button 
+                    onClick={() => setShowHelp(false)}
+                    className="w-full mt-6 py-3 bg-blue-600 hover:bg-blue-500 text-white pixel-font text-center border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,0.5)] active:translate-y-1 active:shadow-none"
+                >
+                    RESUME TRANSMISSION
+                </button>
+             </div>
+        </div>
+      )}
 
       {/* Start Screen */}
       {gameState === GameState.START && (
