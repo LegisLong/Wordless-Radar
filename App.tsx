@@ -330,7 +330,7 @@ const App: React.FC = () => {
       <div className="absolute top-0 left-0 w-full p-2 md:p-6 flex justify-between items-start z-50 pointer-events-none">
         {/* Left: Game Title & Progress */}
         <div className="pointer-events-auto max-w-[50%] md:max-w-none">
-            <h1 className={`hidden md:block ${headerFontClass} text-xl md:text-2xl text-yellow-400 drop-shadow-[4px_4px_0_rgba(0,0,0,1)]`}>SEMANTIC RADIO</h1>
+            <h1 className={`hidden md:block ${headerFontClass} text-xl md:text-2xl text-yellow-400 drop-shadow-[4px_4px_0_rgba(0,0,0,1)]`}>WORDLESS RADAR</h1>
             <div className="bg-black/60 p-2 md:mt-2 rounded border border-gray-600 backdrop-blur-sm inline-block shadow-md">
                 <div className="text-blue-300 text-xs md:text-lg uppercase truncate">
                     {t.mission} {currentLevelConfig.level}: <span className="block md:inline">{currentLevelConfig.name}</span>
