@@ -31,6 +31,15 @@ export class AudioController {
     }
   }
 
+  public setVolume(value: number) {
+    if (this.masterGain && this.ctx) {
+        // Clamp between 0 and 1. value input is 0.0 to 1.0
+        const safeValue = Math.max(0, Math.min(1, value));
+        this.masterGain.gain.cancelScheduledValues(this.ctx.currentTime);
+        this.masterGain.gain.setValueAtTime(safeValue, this.ctx.currentTime);
+    }
+  }
+
   playSuccess() {
     this.resume();
     if (!this.ctx || !this.masterGain) return;

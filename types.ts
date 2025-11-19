@@ -69,4 +69,10 @@ export interface TranslationDictionary {
   controlsDesc: string;
   resume: string;
   briefingText: string;
+  settings: string;
+  volume: string;
+  quit: string;
+  restart: string;
+  close: string;
+  menu: string;
 }

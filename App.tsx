@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { RadioMachine } from './components/RadioMachine';
 import { SignalWordItem } from './components/SignalWord';
@@ -17,6 +18,8 @@ const App: React.FC = () => {
   const [timeLeft, setTimeLeft] = useState(0);
   
   const [showHelp, setShowHelp] = useState(false); 
+  const [showMenu, setShowMenu] = useState(false);
+  const [volume, setVolume] = useState(30); // Default 30% (0.3 gain)
   const [language, setLanguage] = useState<Language>('en');
 
   const [feedback, setFeedback] = useState<'idle' | 'success' | 'failure' | 'partial_failure'>('idle');
@@ -39,7 +42,8 @@ const App: React.FC = () => {
   // Timer Logic
   useEffect(() => {
     let timer: ReturnType<typeof setInterval>;
-    if (gameState === GameState.PLAYING && timeLeft > 0 && !showHelp) {
+    // Pause timer if help or menu is open
+    if (gameState === GameState.PLAYING && timeLeft > 0 && !showHelp && !showMenu) {
       timer = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 10 && prev > 0) {
@@ -54,7 +58,7 @@ const App: React.FC = () => {
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [gameState, timeLeft, showHelp]);
+  }, [gameState, timeLeft, showHelp, showMenu]);
 
   const startGame = async () => {
     audioService.resume(); 
@@ -65,9 +69,24 @@ const App: React.FC = () => {
     setLevelIndex(0);
     setTimeLeft(LEVELS[0].duration);
     setGameState(GameState.LOADING);
+    setShowMenu(false);
     await spawnWords(LEVELS[0], true); 
     setGameState(GameState.PLAYING);
   };
+
+  const restartCurrentGame = async () => {
+    audioService.playScan();
+    // Just restart completely
+    startGame();
+  }
+
+  const quitToTitle = () => {
+    setGameState(GameState.START);
+    setWords([]);
+    setScore(0);
+    setShowMenu(false);
+    audioService.playFailure(); // Sound effect for abort
+  }
 
   const nextLevel = async () => {
     if (levelIndex + 1 < LEVELS.length) {
@@ -102,28 +121,72 @@ const App: React.FC = () => {
         const newWordsData = await fetchSignalBatch(20, config.promptContext, config.rules, language);
         const screenW = window.innerWidth;
         const screenH = window.innerHeight;
-        
-        const formattedWords: SignalWord[] = newWordsData.map((w) => ({
-            ...w,
-            id: Math.random().toString(36).substr(2, 9),
-            x: Math.random() * (screenW - 200) + 50,
-            y: Math.random() * (screenH - 300) + 50,
-            rotation: (Math.random() * 20) - 10
-        }));
-        
-        const cleanWords = formattedWords.map(w => {
-            const centerX = screenW / 2;
-            const centerY = screenH / 2;
-            const dist = Math.sqrt(Math.pow(w.x - centerX, 2) + Math.pow(w.y - centerY, 2));
-            if (dist < 250) {
-                return { ...w, x: w.x < centerX ? w.x - 200 : w.x + 200 };
+        const centerX = screenW / 2;
+        const centerY = screenH / 2;
+
+        // Helper to find safe position avoiding UI elements
+        const getSafePosition = () => {
+            let x = 0, y = 0, valid = false, attempts = 0;
+            
+            // UI Exclusion Zones
+            // Top Left (Mission): ~360x200
+            // Top Right (Menu): ~420x200
+            // Bottom Right (Rescan): ~250x150
+            // Center (Radio): Radius 260
+            
+            while (!valid && attempts < 50) {
+                // Generate with basic padding
+                x = Math.random() * (screenW - 100) + 50;
+                y = Math.random() * (screenH - 100) + 50;
+                valid = true;
+
+                // 1. Center Exclusion
+                if (Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2)) < 260) {
+                    valid = false;
+                } 
+                // 2. Top Left Exclusion
+                else if (x < 360 && y < 200) {
+                    valid = false;
+                }
+                // 3. Top Right Exclusion
+                else if (x > screenW - 420 && y < 200) {
+                    valid = false;
+                }
+                // 4. Bottom Right Exclusion
+                else if (x > screenW - 250 && y > screenH - 150) {
+                    valid = false;
+                }
+
+                attempts++;
             }
-            return w;
+
+            // Fallback: If crowded, just avoid center
+            if (!valid) {
+                x = Math.random() * (screenW - 100) + 50;
+                y = Math.random() * (screenH - 100) + 50;
+                const dist = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+                if (dist < 260) {
+                     // Push to sides
+                     x = x < centerX ? x - 200 : x + 200;
+                }
+            }
+            return { x, y };
+        };
+        
+        const formattedWords: SignalWord[] = newWordsData.map((w) => {
+            const pos = getSafePosition();
+            return {
+                ...w,
+                id: Math.random().toString(36).substr(2, 9),
+                x: pos.x,
+                y: pos.y,
+                rotation: (Math.random() * 20) - 10
+            };
         });
 
         setWords(prev => {
              if (replace) {
-                 return cleanWords;
+                 return formattedWords;
              }
              let current = prev;
              if (current.length > 25) {
@@ -131,7 +194,7 @@ const App: React.FC = () => {
                  const others = current.filter(w => validateWord(w, config) !== 'valid');
                  current = [...valid, ...others.slice(-8)];
              }
-             return [...current, ...cleanWords];
+             return [...current, ...formattedWords];
         });
     } catch (e) {
         console.error("Failed to spawn words", e);
@@ -223,8 +286,14 @@ const App: React.FC = () => {
 
   const toggleLanguage = () => {
       setLanguage(prev => prev === 'en' ? 'vi' : 'en');
-      audioService.playDragStart(); // Re-use simple blip
+      audioService.playDragStart(); 
   }
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const val = parseInt(e.target.value, 10);
+      setVolume(val);
+      audioService.setVolume(val / 100);
+  };
 
   // Dynamic font classes based on language
   const isVietnamese = language === 'vi';
@@ -235,12 +304,13 @@ const App: React.FC = () => {
     <div className={`w-full h-screen overflow-hidden bg-[#1a1a2e] relative select-none ${bodyFontClass}`}>
       
       {/* UI Overlay */}
-      <div className="absolute top-0 left-0 w-full p-6 flex justify-between items-start z-50 pointer-events-none">
-        <div>
-            <h1 className={`${headerFontClass} text-2xl text-yellow-400 drop-shadow-[4px_4px_0_rgba(0,0,0,1)]`}>SEMANTIC RADIO</h1>
-            <div className="bg-black/50 p-2 mt-2 rounded border border-gray-600 backdrop-blur-sm inline-block">
-                <div className="text-blue-300 text-lg uppercase">{t.mission} {currentLevelConfig.level}: {currentLevelConfig.name}</div>
-                <div className="w-48 h-2 bg-gray-700 rounded-full mt-1 overflow-hidden">
+      <div className="absolute top-0 left-0 w-full p-4 md:p-6 flex justify-between items-start z-50 pointer-events-none">
+        {/* Left: Game Title & Progress */}
+        <div className="pointer-events-auto">
+            <h1 className={`${headerFontClass} text-xl md:text-2xl text-yellow-400 drop-shadow-[4px_4px_0_rgba(0,0,0,1)]`}>SEMANTIC RADIO</h1>
+            <div className="bg-black/60 p-2 mt-2 rounded border border-gray-600 backdrop-blur-sm inline-block shadow-md">
+                <div className="text-blue-300 text-base md:text-lg uppercase">{t.mission} {currentLevelConfig.level}: {currentLevelConfig.name}</div>
+                <div className="w-32 md:w-48 h-2 bg-gray-700 rounded-full mt-1 overflow-hidden">
                     <div 
                         className="h-full bg-blue-500 transition-all duration-500" 
                         style={{ width: `${Math.min(100, (score / currentLevelConfig.targetScore) * 100)}%` }}
@@ -249,41 +319,67 @@ const App: React.FC = () => {
                 <div className="text-xs text-gray-400 mt-1 text-right">{score} / {currentLevelConfig.targetScore}</div>
             </div>
         </div>
-        <div className="text-right pointer-events-auto flex flex-col items-end">
-            <div className="flex gap-4 items-start">
-                <button
-                    onClick={toggleLanguage}
-                    className={`px-3 py-1 bg-gray-800 text-white ${headerFontClass} text-xs border-2 border-gray-600 hover:bg-gray-700 transition-all`}
-                >
-                    {language === 'en' ? 'LANG: EN' : 'LANG: VI'}
-                </button>
-                <button 
-                    onClick={() => setShowHelp(true)}
-                    className={`px-3 py-1 bg-blue-600 text-white ${headerFontClass} text-xs border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all`}
-                >
-                    ? {t.manual}
-                </button>
-                <div>
-                    <div className={`${headerFontClass} text-sm text-gray-500 mb-1`}>{t.top}: {topScore}</div>
-                    <div className={`${headerFontClass} text-5xl text-white drop-shadow-[4px_4px_0_rgba(0,0,0,1)]`}>
+
+        {/* Right: HUD Control Panel */}
+        <div className="pointer-events-auto flex flex-col items-end">
+            {/* Control Container */}
+            <div className="flex items-stretch bg-slate-900/90 border-2 border-slate-600 rounded-lg backdrop-blur-md shadow-[6px_6px_0_rgba(0,0,0,0.6)] overflow-hidden">
+                
+                {/* Left Section: Buttons */}
+                <div className="flex flex-col border-r border-gray-600">
+                    {/* Top Row buttons */}
+                    <div className="flex border-b border-gray-600">
+                         <button
+                            onClick={toggleLanguage}
+                            className={`px-3 py-2 bg-transparent hover:bg-white/10 text-white ${headerFontClass} text-xs border-r border-gray-600 transition-colors`}
+                        >
+                            {language.toUpperCase()}
+                        </button>
+                        <button 
+                            onClick={() => setShowHelp(true)}
+                            className={`px-3 py-2 bg-transparent hover:bg-white/10 text-blue-300 ${headerFontClass} text-xs transition-colors`}
+                        >
+                            ? {t.manual}
+                        </button>
+                    </div>
+                    
+                    {/* Bottom Row: Pause/Settings Button */}
+                    <button 
+                        onClick={() => setShowMenu(true)}
+                        className={`flex-1 flex items-center justify-center gap-2 bg-yellow-600 hover:bg-yellow-500 text-black hover:text-black ${headerFontClass} text-xs font-bold py-2 transition-colors`}
+                    >
+                        <span className="font-sans font-black tracking-tighter text-base">||</span> {t.menu}
+                    </button>
+                </div>
+
+                {/* Right Section: Score */}
+                <div className="flex flex-col items-center justify-center px-4 py-2 min-w-[80px] bg-black/40">
+                    <div className={`${headerFontClass} text-[10px] text-gray-400 tracking-widest`}>{t.top}</div>
+                    <div className={`${headerFontClass} text-xs text-yellow-500`}>{topScore}</div>
+                    <div className="w-full h-px bg-gray-700 my-1"></div>
+                    <div className={`${headerFontClass} text-3xl text-white leading-none`}>
                         {score}
                     </div>
                 </div>
             </div>
-            {message && (
-                <motion.div 
-                    initial={{ opacity: 0, y: 10 }} 
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`text-xl font-bold mt-2 ${message.includes('+') ? 'text-green-400' : message.includes(t.ruleViolation) ? 'text-yellow-400' : 'text-red-400'}`}
-                >
-                    {message}
-                </motion.div>
-            )}
+
+            {/* Feedback Messages */}
+            <div className="h-8 mt-2 min-w-[200px] flex justify-end">
+                {message && (
+                    <motion.div 
+                        initial={{ opacity: 0, x: 20 }} 
+                        animate={{ opacity: 1, x: 0 }}
+                        className={`text-lg font-bold px-3 py-1 bg-black/80 border-l-4 rounded shadow-sm ${message.includes('+') ? 'border-green-500 text-green-400' : message.includes(t.ruleViolation) ? 'border-yellow-500 text-yellow-400' : 'border-red-500 text-red-400'}`}
+                    >
+                        {message}
+                    </motion.div>
+                )}
+            </div>
         </div>
       </div>
 
       {/* Controls Bottom Right */}
-      {gameState === GameState.PLAYING && !showHelp && (
+      {gameState === GameState.PLAYING && !showHelp && !showMenu && (
         <div className="absolute bottom-6 right-6 z-50 pointer-events-auto flex flex-col gap-2 items-end">
             <button
                 onClick={handleRegenerate}
@@ -310,6 +406,85 @@ const App: React.FC = () => {
             />
         </div>
       </div>
+
+      {/* Settings Menu */}
+      {showMenu && (
+        <div className="absolute inset-0 z-[100] bg-black/80 flex items-center justify-center p-4 backdrop-blur-md">
+            <motion.div 
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="bg-[#2d2d44] border-4 border-gray-400 p-6 max-w-md w-full shadow-[8px_8px_0px_rgba(0,0,0,1)] relative"
+            >
+                <button 
+                    onClick={() => setShowMenu(false)}
+                    className="absolute top-2 right-2 text-gray-400 hover:text-white font-bold text-xl px-2"
+                >
+                    X
+                </button>
+                
+                <h2 className={`${headerFontClass} text-2xl text-white mb-6 text-center border-b-2 border-gray-600 pb-4`}>
+                    {t.settings}
+                </h2>
+
+                <div className="space-y-6">
+                    {/* Volume Control */}
+                    <div className="space-y-2">
+                        <div className="flex justify-between">
+                           <label className={`block text-yellow-400 ${headerFontClass} text-sm`}>
+                              {t.volume}
+                           </label>
+                           <span className={`${headerFontClass} text-white text-sm`}>{volume}%</span>
+                        </div>
+                        <input 
+                            type="range" 
+                            min="0" 
+                            max="100" 
+                            value={volume} 
+                            onChange={handleVolumeChange}
+                            className="w-full h-4 bg-black rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:bg-yellow-400 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white"
+                        />
+                    </div>
+
+                    {/* Language Toggle in Menu */}
+                    <div className="flex justify-between items-center bg-black/30 p-3 rounded border border-gray-600">
+                        <span className={`text-gray-300 ${headerFontClass} text-sm`}>LANGUAGE</span>
+                        <button 
+                            onClick={toggleLanguage}
+                            className={`px-4 py-1 bg-gray-700 text-white ${headerFontClass} text-xs border border-gray-500 hover:bg-gray-600`}
+                        >
+                            {language === 'en' ? 'ENGLISH' : 'TIẾNG VIỆT'}
+                        </button>
+                    </div>
+
+                    <div className="h-px bg-gray-600 my-4" />
+
+                    {/* Game Controls */}
+                    <div className="grid grid-cols-1 gap-3">
+                         <button 
+                            onClick={restartCurrentGame}
+                            className={`w-full py-3 bg-blue-700 hover:bg-blue-600 text-white ${headerFontClass} border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,0.5)] active:translate-y-1 active:shadow-none`}
+                        >
+                            {t.restart}
+                        </button>
+                        
+                        <button 
+                            onClick={quitToTitle}
+                            className={`w-full py-3 bg-red-800 hover:bg-red-700 text-white ${headerFontClass} border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,0.5)] active:translate-y-1 active:shadow-none`}
+                        >
+                            {t.quit}
+                        </button>
+                    </div>
+                </div>
+
+                <button 
+                    onClick={() => setShowMenu(false)}
+                    className={`w-full mt-6 py-3 bg-gray-200 hover:bg-white text-black font-bold ${headerFontClass} border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,0.5)] active:translate-y-1 active:shadow-none`}
+                >
+                    {t.close}
+                </button>
+            </motion.div>
+        </div>
+      )}
 
       {/* Help/Manual Modal */}
       {showHelp && (

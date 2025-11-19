@@ -30,7 +30,13 @@ const en: TranslationDictionary = {
   controls: "CONTROLS",
   controlsDesc: "Drag cards to the central receiver. Use RESCAN if no valid signals are visible.",
   resume: "RESUME TRANSMISSION",
-  briefingText: "1. FILTER meaningful signals from noise.\n2. OBEY the Level Rules.\n3. RACE against the clock."
+  briefingText: "1. FILTER meaningful signals from noise.\n2. OBEY the Level Rules.\n3. RACE against the clock.",
+  settings: "SYSTEM SETTINGS",
+  volume: "AUDIO GAIN",
+  quit: "ABORT MISSION",
+  restart: "RESTART SYSTEM",
+  close: "CLOSE",
+  menu: "MENU"
 };
 
 const vi: TranslationDictionary = {
@@ -63,7 +69,13 @@ const vi: TranslationDictionary = {
   controls: "ĐIỀU KHIỂN",
   controlsDesc: "Kéo thẻ vào máy thu. Dùng QUÉT LẠI nếu không thấy tín hiệu tốt.",
   resume: "TIẾP TỤC",
-  briefingText: "1. LỌC tín hiệu có nghĩa khỏi nhiễu.\n2. TUÂN THỦ quy tắc cấp độ.\n3. CHẠY ĐUA với thời gian."
+  briefingText: "1. LỌC tín hiệu có nghĩa khỏi nhiễu.\n2. TUÂN THỦ quy tắc cấp độ.\n3. CHẠY ĐUA với thời gian.",
+  settings: "CÀI ĐẶT HỆ THỐNG",
+  volume: "ÂM LƯỢNG",
+  quit: "HỦY NHIỆM VỤ",
+  restart: "KHỞI ĐỘNG LẠI",
+  close: "ĐÓNG",
+  menu: "MENU"
 };
 
 export const getTranslations = (lang: Language): TranslationDictionary => {
