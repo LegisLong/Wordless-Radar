@@ -38,7 +38,7 @@ export const RadioMachine: React.FC<RadioMachineProps> = ({ feedback, timeLeft, 
   const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
   return (
-    <div className="relative flex flex-col items-center justify-center w-80 h-80">
+    <div className="relative flex flex-col items-center justify-center">
       
       {/* SUCCESS ANIMATION OVERLAYS */}
       <AnimatePresence>
@@ -72,7 +72,7 @@ export const RadioMachine: React.FC<RadioMachineProps> = ({ feedback, timeLeft, 
                         scale: 1
                     }}
                     transition={{ duration: 0.5, ease: "easeOut" }}
-                    className="absolute w-3 h-3 bg-green-300 rounded-full z-50 pointer-events-none"
+                    className="absolute w-3 h-3 bg-green-300 rounded-full z-50 pointer-events-none top-1/2 left-1/2"
                 />
             ))}
           </>
@@ -89,9 +89,9 @@ export const RadioMachine: React.FC<RadioMachineProps> = ({ feedback, timeLeft, 
             w-48 bg-yellow-100 text-black p-3 shadow-[4px_4px_0px_rgba(0,0,0,0.5)] border border-gray-400
             text-xs ${fontClass}
             /* Mobile: Position below the machine */
-            top-[85%] left-1/2 -translate-x-1/2
+            top-[90%] left-1/2 -translate-x-1/2
             /* Desktop: Position to the left */
-            md:top-10 md:left-[-12rem] md:translate-x-0 md:-rotate-6
+            md:top-20 md:left-[-14rem] md:translate-x-0 md:-rotate-6
         `}
       >
         <div className="border-b-2 border-red-500/50 mb-1 pb-1 font-bold text-red-800 uppercase text-xs">
@@ -105,79 +105,86 @@ export const RadioMachine: React.FC<RadioMachineProps> = ({ feedback, timeLeft, 
         <div className="absolute -top-3 left-1/2 w-3 h-3 md:w-4 md:h-4 rounded-full bg-red-500/50 shadow-inner" />
       </motion.div>
 
-      {/* Antenna */}
-      <motion.div 
-        className="absolute -top-12 w-2 h-16 bg-gray-400 border-2 border-black"
-        animate={{ 
-          rotate: isSuccess ? [0, -10, 10, 0] : 0,
-          height: isSuccess ? [64, 80, 64] : 64 
-        }}
-      />
-      <div className={`absolute -top-16 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full border-2 border-black ${timeLeft < 10 ? 'bg-red-600 animate-ping' : 'bg-red-500'}`} />
-
-      {/* Dish/Receiver */}
-      <motion.div 
-        className={`w-56 h-40 rounded-b-full border-4 border-black relative overflow-hidden mb-[-10px] z-10 transition-colors duration-300 ${
-          isSuccess ? 'bg-green-500' : isFailure ? 'bg-red-500' : isPartial ? 'bg-yellow-500' : 'bg-gray-300'
-        }`}
-        animate={{
-            rotate: isSuccess ? 360 : 0
-        }}
-        transition={{ duration: 0.5 }}
-      >
-        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-black" />
-        <div className="absolute top-4 left-0 w-full h-1 bg-black opacity-20" />
-        <div className="absolute top-8 left-0 w-full h-1 bg-black opacity-20" />
-        <div className="absolute top-12 left-0 w-full h-1 bg-black opacity-20" />
-      </motion.div>
-
-      {/* Body */}
-      <motion.div 
-        className="w-64 h-48 bg-blue-700 border-4 border-black rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,0.3)] flex flex-col items-center p-4 relative z-20"
-        animate={shake ? { x: [-5, 5, -5, 5, 0] } : {}}
-        transition={{ duration: 0.3 }}
-      >
-        {/* Main Screen */}
-        <div className="w-full h-14 bg-green-900 border-2 border-black mb-3 flex items-center justify-center overflow-hidden relative">
-            <div className="absolute inset-0 bg-[linear-gradient(transparent_1px,_#000_1px)] bg-[length:100%_2px] opacity-20 pointer-events-none" />
-            <div className={`text-green-400 text-xs whitespace-nowrap ${fontClass} ${isSuccess || isFailure ? '' : 'animate-marquee'}`}>
-               {isSuccess ? t.signalVerified : isFailure ? t.errorInvalid : isPartial ? t.ruleViolation : t.awaitingInput}
-            </div>
-        </div>
-
-        {/* Timer Screen */}
-        <div className="w-full flex justify-between items-end px-1 mb-2">
-             <div className="flex flex-col">
-                <span className={`text-[8px] text-white font-bold mb-1 ${headerFontClass}`}>{t.timer}</span>
-                <div className={`bg-black border border-gray-600 px-2 py-1 rounded text-red-500 text-xl tracking-widest shadow-inner ${fontClass}`}>
-                    {timeString}
-                </div>
-             </div>
-             
-             <div className="flex gap-2">
-                 <div className={`w-3 h-3 rounded-full border border-black ${timeLeft % 2 === 0 ? 'bg-yellow-400' : 'bg-yellow-600'}`} />
-                 <div className={`w-3 h-3 rounded-full border border-black ${timeLeft % 2 !== 0 ? 'bg-yellow-400' : 'bg-yellow-600'}`} />
-             </div>
-        </div>
-
-        {/* Knobs */}
-        <div className="flex justify-between w-full px-4 mt-auto">
-            <div className="w-12 h-12 rounded-full border-2 border-black bg-gray-700 flex items-center justify-center shadow-[2px_2px_0_rgba(0,0,0,0.5)]">
-                <motion.div 
-                    className="w-2 h-6 bg-black" 
-                    animate={{ rotate: isSuccess ? 90 : -45 }}
-                />
-            </div>
-             <div className="flex flex-col gap-2 justify-end">
-                <div className="w-20 h-3 bg-black opacity-50 rounded-full" />
-                <div className="w-20 h-3 bg-black opacity-50 rounded-full" />
-             </div>
-        </div>
+      {/* Machine Construction Stack */}
+      <div className="flex flex-col items-center relative z-10">
         
-      </motion.div>
+        {/* Antenna Section (Grouped to stay with dish) */}
+        <div className="flex flex-col items-center -mb-6 z-0 relative translate-y-2">
+            <div className={`w-4 h-4 rounded-full border-2 border-black relative z-10 ${timeLeft < 10 ? 'bg-red-600 animate-ping' : 'bg-red-500'}`} />
+            <motion.div 
+                className="w-2 h-16 bg-gray-400 border-2 border-black -mt-1"
+                animate={{ 
+                rotate: isSuccess ? [0, -10, 10, 0] : 0,
+                height: isSuccess ? [64, 80, 64] : 64 
+                }}
+                transition={{ duration: 0.4 }}
+            />
+        </div>
+
+        {/* Dish/Receiver */}
+        <motion.div 
+            className={`w-56 h-40 rounded-b-full border-4 border-black relative overflow-hidden z-10 transition-colors duration-300 ${
+            isSuccess ? 'bg-green-500' : isFailure ? 'bg-red-500' : isPartial ? 'bg-yellow-500' : 'bg-gray-300'
+            }`}
+            animate={{
+                rotate: isSuccess ? 360 : 0
+            }}
+            transition={{ duration: 0.5 }}
+        >
+            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-black" />
+            <div className="absolute top-4 left-0 w-full h-1 bg-black opacity-20" />
+            <div className="absolute top-8 left-0 w-full h-1 bg-black opacity-20" />
+            <div className="absolute top-12 left-0 w-full h-1 bg-black opacity-20" />
+        </motion.div>
+
+        {/* Body */}
+        <motion.div 
+            className="w-64 h-48 bg-blue-700 border-4 border-black rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,0.3)] flex flex-col items-center p-4 relative z-20 -mt-3"
+            animate={shake ? { x: [-5, 5, -5, 5, 0] } : {}}
+            transition={{ duration: 0.3 }}
+        >
+            {/* Main Screen */}
+            <div className="w-full h-14 bg-green-900 border-2 border-black mb-3 flex items-center justify-center overflow-hidden relative">
+                <div className="absolute inset-0 bg-[linear-gradient(transparent_1px,_#000_1px)] bg-[length:100%_2px] opacity-20 pointer-events-none" />
+                <div className={`text-green-400 text-xs whitespace-nowrap ${fontClass} ${isSuccess || isFailure ? '' : 'animate-marquee'}`}>
+                {isSuccess ? t.signalVerified : isFailure ? t.errorInvalid : isPartial ? t.ruleViolation : t.awaitingInput}
+                </div>
+            </div>
+
+            {/* Timer Screen */}
+            <div className="w-full flex justify-between items-end px-1 mb-2">
+                <div className="flex flex-col">
+                    <span className={`text-[8px] text-white font-bold mb-1 ${headerFontClass}`}>{t.timer}</span>
+                    <div className={`bg-black border border-gray-600 px-2 py-1 rounded text-red-500 text-xl tracking-widest shadow-inner ${fontClass}`}>
+                        {timeString}
+                    </div>
+                </div>
+                
+                <div className="flex gap-2">
+                    <div className={`w-3 h-3 rounded-full border border-black ${timeLeft % 2 === 0 ? 'bg-yellow-400' : 'bg-yellow-600'}`} />
+                    <div className={`w-3 h-3 rounded-full border border-black ${timeLeft % 2 !== 0 ? 'bg-yellow-400' : 'bg-yellow-600'}`} />
+                </div>
+            </div>
+
+            {/* Knobs */}
+            <div className="flex justify-between w-full px-4 mt-auto">
+                <div className="w-12 h-12 rounded-full border-2 border-black bg-gray-700 flex items-center justify-center shadow-[2px_2px_0_rgba(0,0,0,0.5)]">
+                    <motion.div 
+                        className="w-2 h-6 bg-black" 
+                        animate={{ rotate: isSuccess ? 90 : -45 }}
+                    />
+                </div>
+                <div className="flex flex-col gap-2 justify-end">
+                    <div className="w-20 h-3 bg-black opacity-50 rounded-full" />
+                    <div className="w-20 h-3 bg-black opacity-50 rounded-full" />
+                </div>
+            </div>
+            
+        </motion.div>
+      </div>
 
       {/* Drop Zone Indicator */}
-      <div className="absolute inset-0 z-0 rounded-full bg-white opacity-5 animate-pulse pointer-events-none" style={{ scale: 1.6 }} />
+      <div className="absolute inset-0 z-0 rounded-full bg-white opacity-5 animate-pulse pointer-events-none top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[320px] h-[320px]" />
     </div>
   );
 };
