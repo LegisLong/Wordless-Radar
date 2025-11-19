@@ -7,7 +7,6 @@ import { audioService } from '../services/audioService';
 interface Props {
   word: SignalWordType;
   onDragEnd: (id: string, x: number, y: number, r: number) => void;
-  isVietnamese: boolean;
 }
 
 const glitchVariants: Variants = {
@@ -29,7 +28,7 @@ const glitchVariants: Variants = {
   }
 };
 
-export const SignalWordItem: React.FC<Props> = ({ word, onDragEnd, isVietnamese }) => {
+export const SignalWordItem: React.FC<Props> = ({ word, onDragEnd }) => {
   const controls = useDragControls();
   const [isDragging, setIsDragging] = useState(false);
 
@@ -57,16 +56,12 @@ export const SignalWordItem: React.FC<Props> = ({ word, onDragEnd, isVietnamese 
       onDragEnd={(_, info) => {
         setIsDragging(false);
         audioService.playDragEnd();
-        // Use info.point (pointer position) for accurate drop detection.
-        // Relying on event.target.getBoundingClientRect() can be buggy if the target
-        // resolves to the container/body (center of screen) during rapid movements.
         onDragEnd(word.id, info.point.x, info.point.y, 0);
       }}
       className={`
-        absolute px-3 py-1.5
-        font-bold text-base select-none
+        absolute px-5 py-2.5
+        font-bold text-2xl select-none
         flex items-center justify-center
-        transition-all duration-200
         border backdrop-blur-sm
         ${isDragging ? 'border-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.8)] bg-black/90' : 'border-cyan-600 shadow-[0_0_6px_rgba(6,182,212,0.4)] bg-black/70'}
       `}
@@ -74,16 +69,16 @@ export const SignalWordItem: React.FC<Props> = ({ word, onDragEnd, isVietnamese 
         left: 0,
         top: 0,
         color: '#22d3ee', // Cyan-400
-        fontFamily: isVietnamese ? '"Space Mono", monospace' : '"VT323", monospace',
+        fontFamily: '"VT323", monospace',
         // Retro scanline effect
         backgroundImage: 'repeating-linear-gradient(transparent 0px, transparent 2px, rgba(34, 211, 238, 0.1) 3px)',
       }}
     >
-      {/* Corner accents for tech look */}
-      <div className="absolute -top-[1px] -left-[1px] w-1.5 h-1.5 border-t-2 border-l-2 border-cyan-400" />
-      <div className="absolute -top-[1px] -right-[1px] w-1.5 h-1.5 border-t-2 border-r-2 border-cyan-400" />
-      <div className="absolute -bottom-[1px] -left-[1px] w-1.5 h-1.5 border-b-2 border-l-2 border-cyan-400" />
-      <div className="absolute -bottom-[1px] -right-[1px] w-1.5 h-1.5 border-b-2 border-r-2 border-cyan-400" />
+      {/* Corner accents for tech look - Bigger for new size */}
+      <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-cyan-400" />
+      <div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t-2 border-r-2 border-cyan-400" />
+      <div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b-2 border-l-2 border-cyan-400" />
+      <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-cyan-400" />
 
       {/* Ghost/Trail Effect when dragging */}
       {isDragging && (
