@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RuleSet, TranslationDictionary } from '../types';
@@ -39,22 +40,69 @@ export const RadioMachine: React.FC<RadioMachineProps> = ({ feedback, timeLeft, 
   return (
     <div className="relative flex flex-col items-center justify-center w-80 h-80">
       
-      {/* Level / Rules Sticky Note */}
+      {/* SUCCESS ANIMATION OVERLAYS */}
+      <AnimatePresence>
+        {isSuccess && (
+          <>
+            {/* Bright Flash Background */}
+            <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: [0, 0.8, 0], scale: 1.1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4 }}
+                className="absolute inset-0 rounded-full bg-green-400/40 blur-2xl z-0 pointer-events-none"
+            />
+            {/* Expanding Shockwave Ring */}
+            <motion.div
+                initial={{ scale: 0.5, opacity: 1, borderWidth: "8px" }}
+                animate={{ scale: 1.6, opacity: 0, borderWidth: "0px" }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+                className="absolute inset-0 rounded-full border-green-300 z-50 pointer-events-none"
+                style={{ borderStyle: "solid", borderColor: "#86efac" }}
+            />
+            {/* Particle Burst (Simple implementation) */}
+            {[...Array(6)].map((_, i) => (
+                <motion.div
+                    key={i}
+                    initial={{ opacity: 1, x: 0, y: 0, scale: 0 }}
+                    animate={{ 
+                        opacity: 0, 
+                        x: Math.cos(i * 60 * (Math.PI / 180)) * 150, 
+                        y: Math.sin(i * 60 * (Math.PI / 180)) * 150,
+                        scale: 1
+                    }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                    className="absolute w-3 h-3 bg-green-300 rounded-full z-50 pointer-events-none"
+                />
+            ))}
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Level / Rules Sticky Note - Responsive Positioning */}
       <motion.div 
-        initial={{ x: -50, opacity: 0, rotate: -5 }}
-        animate={{ x: 0, opacity: 1, rotate: -5 }}
+        initial={{ opacity: 0, rotate: -5 }}
+        animate={{ opacity: 1, rotate: -3 }}
         key={currentLevel} // Re-animate on level change
-        className={`absolute -left-48 top-10 w-48 bg-yellow-100 text-black p-4 shadow-[4px_4px_0px_rgba(0,0,0,0.5)] transform -rotate-6 z-30 text-sm border border-gray-400 ${fontClass}`}
+        className={`
+            absolute z-0
+            w-48 bg-yellow-100 text-black p-3 shadow-[4px_4px_0px_rgba(0,0,0,0.5)] border border-gray-400
+            text-xs ${fontClass}
+            /* Mobile: Position below the machine */
+            top-[85%] left-1/2 -translate-x-1/2
+            /* Desktop: Position to the left */
+            md:top-10 md:left-[-12rem] md:translate-x-0 md:-rotate-6
+        `}
       >
-        <div className="border-b-2 border-red-500/50 mb-2 pb-1 font-bold text-red-800 uppercase">
+        <div className="border-b-2 border-red-500/50 mb-1 pb-1 font-bold text-red-800 uppercase text-xs">
             {t.mission}: {currentLevel}
         </div>
-        <ul className="list-disc pl-4 space-y-1 text-xs font-bold text-gray-800">
+        <ul className="list-disc pl-4 space-y-1 text-[10px] md:text-xs font-bold text-gray-800 leading-tight">
             <li>{rules.description}</li>
             {rules.excludeChar && <li className="text-red-600">AVOID: "{rules.excludeChar.toUpperCase()}"</li>}
-            <li className="text-blue-800 uppercase">{t.score}: {score}</li>
+            <li className="text-blue-800 uppercase pt-1">{t.score}: {score}</li>
         </ul>
-        <div className="absolute -top-3 left-1/2 w-4 h-4 rounded-full bg-red-500/50 shadow-inner" />
+        <div className="absolute -top-3 left-1/2 w-3 h-3 md:w-4 md:h-4 rounded-full bg-red-500/50 shadow-inner" />
       </motion.div>
 
       {/* Antenna */}

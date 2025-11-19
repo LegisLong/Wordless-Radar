@@ -1,9 +1,6 @@
 
-import { GoogleGenAI, Type } from "@google/genai";
 import { SignalWord, RuleSet, Language } from "../types";
 import { getVocabulary } from "../data/vocabulary";
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
 // Helper to generate random "nasty" noise algorithmically
 const generateNoiseWord = (): string => {
@@ -69,54 +66,7 @@ export const fetchSignalBatch = async (
   
   let items: Omit<SignalWord, 'id' | 'x' | 'y' | 'rotation'>[] = [];
 
-  // 1. Try to get Semantic Words from Gemini with Context
-  if (process.env.API_KEY) {
-    try {
-      const langInstruction = language === 'vi' 
-        ? "Output strictly in VIETNAMESE language." 
-        : "Output strictly in ENGLISH language.";
-      
-      const topic = language === 'vi' 
-        ? "science, space, technology, or nature" 
-        : "science, space, technology, or nature";
-
-      const prompt = `Generate a JSON list of ${semanticCount} distinct, evocative ${langInstruction} words related to ${topic}. 
-      ${promptContext ? `CRITICAL CONSTRAINT: ${promptContext}` : ''}
-      They must be single words. No noise or gibberish, only real dictionary words. Do not include English words if asking for Vietnamese.`;
-
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              words: {
-                type: Type.ARRAY,
-                items: { type: Type.STRING }
-              },
-            },
-            required: ['words'],
-          },
-        },
-      });
-
-      if (response.text) {
-        const data = JSON.parse(response.text);
-        if (Array.isArray(data.words)) {
-            const apiWords = data.words.map((text: string) => ({ text, isMeaningful: true }));
-            // Validate API words against rules just in case
-            const validApiWords = apiWords.filter((w: {text: string}) => meetsRules(w.text, rules));
-            items = [...items, ...validApiWords];
-        }
-      }
-    } catch (error) {
-      console.error("Gemini API Error:", error);
-    }
-  }
-
-  // 2. Fill remaining semantic slots with vocabulary (Fallback logic)
+  // 1. Fill semantic slots with vocabulary (Local Logic)
   const vocabList = getVocabulary(language);
   const shuffledVocab = [...vocabList].sort(() => Math.random() - 0.5);
   let vocabIndex = 0;
@@ -133,7 +83,7 @@ export const fetchSignalBatch = async (
     }
   }
 
-  // If we STILL don't have enough (e.g. very strict rules and no API), fill with random vocab
+  // If we STILL don't have enough (e.g. very strict rules), fill with random vocab
   // even if they break rules, so at least the game doesn't crash/hang.
   vocabIndex = 0;
   while (items.length < semanticCount) {
@@ -144,7 +94,7 @@ export const fetchSignalBatch = async (
     vocabIndex++;
   }
 
-  // 3. Generate Nasty Noise Words Locally (Noise is language agnostic usually, or purely machine code)
+  // 2. Generate Nasty Noise Words Locally (Noise is language agnostic usually, or purely machine code)
   for (let i = 0; i < noiseCount; i++) {
     items.push({
         text: generateNoiseWord(),
@@ -152,6 +102,6 @@ export const fetchSignalBatch = async (
     });
   }
 
-  // 4. Shuffle everything together
+  // 3. Shuffle everything together
   return items.sort(() => Math.random() - 0.5);
 };

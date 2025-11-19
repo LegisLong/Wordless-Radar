@@ -1,6 +1,7 @@
 
 // Expanded vocabulary for fallback/mock mode
 export const SEMANTIC_VOCABULARY_EN = [
+  // Short/Medium
   "Galaxy", "Nebula", "Quantum", "Frequency", "Horizon", "Starlight", 
   "Cosmos", "Gravity", "Eclipse", "Meteor", "Pulsar", "Quasar", 
   "Orbit", "Vacuum", "Entropy", "Fusion", "Plasma", "Vortex",
@@ -15,10 +16,24 @@ export const SEMANTIC_VOCABULARY_EN = [
   "Cell", "Life", "Mind", "Soul", "Heart", "Blood", "Bone",
   "Star", "Planet", "Moon", "Sun", "Earth", "Mars", "Venus",
   "Code", "Data", "Byte", "Node", "Link", "Grid", "Mesh", "Net",
-  "Zero", "One", "Alpha", "Omega", "Prime", "Core", "Base", "Root"
+  "Zero", "One", "Alpha", "Omega", "Prime", "Core", "Base", "Root",
+  "Chaos", "Order", "Cycle", "Phase", "Shift", "Drift", "Flux",
+  
+  // Long / Complex (Added for Levels 10-15)
+  "Dimension", "Asteroid", "Satellite", "Telescope", "Universe", "Existence",
+  "Vibration", "Spectrum", "Magnetic", "Velocity", "Infinite", "Parallel",
+  "Singularity", "Relativity", "Evolution", "Atmosphere", "Constellation",
+  "Interstellar", "Transmission", "Navigation", "Coordinates", "Trajectory",
+  "Propulsion", "Radiation", "Particle", "Molecule", "Organism", "Consciousness",
+  "Intelligence", "Technology", "Mechanism", "Algorithm", "Encryption",
+  "Decryption", "Fragment", "Sequence", "Protocol", "Interface", "Network",
+  "Connection", "Isolation", "Discovery", "Exploration", "Adventure",
+  "Destination", "Departure", "Arrival", "Silence", "Darkness", "Brightness",
+  "Invisible", "Ethereal", "Luminous", "Radiant", "Harmonic", "Dynamic"
 ];
 
 export const SEMANTIC_VOCABULARY_VI = [
+  // Short/Medium
   "VũTrụ", "ThiênHà", "Sao", "ÁnhSáng", "BóngTối", "ThờiGian",
   "KhôngGian", "TráiĐất", "MặtTrời", "MặtTrăng", "Sóng", "ÂmThanh",
   "TínHiệu", "KếtNối", "TươngLai", "QuáKhứ", "KýỨc", "Mơ",
@@ -28,10 +43,21 @@ export const SEMANTIC_VOCABULARY_VI = [
   "ThiênThạch", "Bão", "Gió", "Lửa", "Nước", "Đất", "Khí",
   "SinhHọc", "TếBào", "Gen", "TiếnHóa", "TríTuệ", "CảmXúc",
   "HạnhPhúc", "TựDo", "HòaBình", "ChiếnTranh", "HủyDiệt", "TáiSinh",
-  "VĩnhCửu", "KhoảnhKhắc", "NhịpĐiệu", "TầnSố", "VôTuyến", "VệTinh",
+  "VĩnhCửu", "KhoảnhKhắc", "NhịpĐiệu", "TầnSố", "VôTuyến",
   "LỗĐen", "QuangPhổ", "TừTrường", "ĐiệnÁp", "ViMạch", "RôBốt",
   "MạngLưới", "ThôngTin", "SángTạo", "KhámPhá", "HànhTrình", "ĐíchĐến",
-  "KhởiĐầu", "KếtThúc", "VòngLặp", "MaTrận", "ẢoẢnh", "ChânLý"
+  "KhởiĐầu", "KếtThúc", "VòngLặp", "MaTrận", "ẢoẢnh", "ChânLý",
+  "ĐịnhMệnh", "KỳDiệu", "ThựcTại", "GiảTưởng", "LýThuyết",
+  
+  // Long / Complex (Added for Levels 10-15)
+  "KhôngTrọngLực", "ĐaVũTrụ", "SiêuTânTinh", "HốĐenVũTrụ", "KínhViễnVọng",
+  "PhiThuyền", "NgườiNgoàiHànhTinh", "TrạmKhôngGian", "HệMặtTrời", "DảiNgânHà",
+  "VậnTốcÁnhSáng", "NămÁnhSáng", "BứcXạVũTrụ", "TừTrườngTráiĐất",
+  "SinhVậtHọc", "CôngNghệCao", "TríTuệNhânTạo", "ThựcTếẢo", "LậpTrìnhViên",
+  "HệThốngMạng", "AnNinhMạng", "TruyềnThông", "ViễnThông", "ĐiệnThoại",
+  "MáyViTính", "ThuậtToán", "CơSởDữLiệu", "PhầnMềm", "PhầnCứng",
+  "MôiTrường", "KhíQuyển", "ĐạiDương", "LụcĐịa", "KhoángSản", "TàiNguyên",
+  "VôTận", "BấtDiệt", "HuyềnThoại", "CổĐại", "HiệnĐại", "TươngLaiXa"
 ];
 
 export const getVocabulary = (lang: 'en' | 'vi') => {

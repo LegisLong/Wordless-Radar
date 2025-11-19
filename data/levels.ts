@@ -5,56 +5,184 @@ export const getLevels = (lang: Language): LevelConfig[] => {
     const isVi = lang === 'vi';
 
     return [
+      // --- PHASE 1: INITIALIZATION (Levels 1-4) ---
       {
         level: 1,
         name: isVi ? "HIỆU CHỈNH" : "CALIBRATION",
         targetScore: 50,
-        duration: 60,
+        duration: 45, // Reduced from 60
         rules: {
           description: isVi ? "Bất kỳ từ có nghĩa nào" : "ANY meaningful word",
         },
-        promptContext: isVi ? "" : ""
+        promptContext: ""
       },
       {
         level: 2,
         name: isVi ? "BĂNG TẦN HẸP" : "NARROW BAND",
-        targetScore: 120,
-        duration: 45,
+        targetScore: 80,
+        duration: 40, // Reduced from 50
         rules: {
-          minLength: 5,
-          description: isVi ? "Có nghĩa & Dài > 4 ký tự" : "Meaningful & Length > 4",
+          minLength: 4,
+          description: isVi ? "Có nghĩa & Dài > 3 ký tự" : "Meaningful & Length > 3",
         },
-        promptContext: isVi 
-            ? "Từ phải dài ít nhất 5 chữ cái." 
-            : "Words must be at least 5 letters long."
+        promptContext: ""
       },
       {
         level: 3,
-        name: isVi ? "BỘ LỌC PHỨC TẠP" : "COMPLEX FILTER",
-        targetScore: 200,
-        duration: 45,
+        name: isVi ? "SÓNG ALPHA" : "ALPHA WAVE",
+        targetScore: 100,
+        duration: 35, // Reduced from 45
         rules: {
-          minLength: 6,
-          includeChar: isVi ? 'a' : 'r', // 'r' is less common in VI, swapped to 'a' or 'n' usually, but 'a' is safe
-          description: isVi ? "Dài > 5 & Chứa 'A'" : "Length > 5 & Contains 'R'",
+          includeChar: isVi ? 'a' : 'a',
+          description: isVi ? "Phải chứa chữ 'A'" : "Must contain 'A'",
         },
-        promptContext: isVi 
-            ? "Từ phải dài ít nhất 6 chữ cái VÀ chứa chữ 'a'." 
-            : "Words must be at least 6 letters long AND contain the letter 'r'."
+        promptContext: ""
       },
       {
         level: 4,
-        name: isVi ? "CHẾ ĐỘ IM LẶNG" : "SILENT MODE",
-        targetScore: 9999, // Endless for now
-        duration: 45,
+        name: isVi ? "CHỐNG NHIỄU" : "ANTI-STATIC",
+        targetScore: 120,
+        duration: 35, // Reduced from 45
         rules: {
-          minLength: 4,
-          excludeChar: isVi ? 'n' : 'e', // 'e' is super common in EN, 'n' is common in VI
-          description: isVi ? "Có nghĩa & KHÔNG có 'N'" : "Meaningful & NO letter 'E'",
+          excludeChar: isVi ? 'h' : 'e',
+          description: isVi ? "KHÔNG chứa chữ 'H'" : "NO letter 'E'",
         },
-        promptContext: isVi 
-            ? "Từ KHÔNG ĐƯỢC chứa chữ 'n'." 
-            : "Words must NOT contain the letter 'e'."
+        promptContext: ""
+      },
+
+      // --- PHASE 2: COMPLEX FILTERING (Levels 5-9) ---
+      {
+        level: 5,
+        name: isVi ? "SÓNG BETA" : "BETA WAVE",
+        targetScore: 150,
+        duration: 40, // Reduced from 50
+        rules: {
+          minLength: 5,
+          includeChar: isVi ? 't' : 's',
+          description: isVi ? "Dài > 4 & Chứa 'T'" : "Length > 4 & Contains 'S'",
+        },
+        promptContext: ""
+      },
+      {
+        level: 6,
+        name: isVi ? "VÙNG HƯ KHÔNG" : "VOID SECTOR",
+        targetScore: 180,
+        duration: 35, // Reduced from 45
+        rules: {
+          minLength: 6,
+          excludeChar: 'o',
+          description: isVi ? "Dài > 5 & KHÔNG có 'O'" : "Length > 5 & NO 'O'",
+        },
+        promptContext: ""
+      },
+      {
+        level: 7,
+        name: isVi ? "TIA GAMMA" : "GAMMA RAY",
+        targetScore: 210,
+        duration: 35, // Reduced from 45
+        rules: {
+          minLength: 5,
+          includeChar: isVi ? 'g' : 'i',
+          description: isVi ? "Dài > 4 & Chứa 'G'" : "Length > 4 & Contains 'I'",
+        },
+        promptContext: ""
+      },
+      {
+        level: 8,
+        name: isVi ? "PHÂN CỰC" : "POLARIZATION",
+        targetScore: 240,
+        duration: 30, // Reduced from 45
+        rules: {
+          includeChar: isVi ? 'h' : 'e',
+          excludeChar: isVi ? 'n' : 'a',
+          description: isVi ? "Chứa 'H' & KHÔNG có 'N'" : "Has 'E' & NO 'A'",
+        },
+        promptContext: ""
+      },
+      {
+        level: 9,
+        name: isVi ? "KHÔNG GIAN SÂU" : "DEEP SPACE",
+        targetScore: 270,
+        duration: 40, // Reduced from 50
+        rules: {
+          minLength: 7,
+          description: isVi ? "Từ DÀI (> 6 ký tự)" : "LONG words (> 6 chars)",
+        },
+        promptContext: ""
+      },
+
+      // --- PHASE 3: EVENT HORIZON (Levels 10-15) ---
+      {
+        level: 10,
+        name: isVi ? "MẬT MÃ" : "CIPHER",
+        targetScore: 300,
+        duration: 30, // Reduced from 45
+        rules: {
+          minLength: 6,
+          includeChar: isVi ? 'm' : 'c',
+          description: isVi ? "Dài > 5 & Chứa 'M'" : "Length > 5 & Contains 'C'",
+        },
+        promptContext: ""
+      },
+      {
+        level: 11,
+        name: isVi ? "VÙNG YÊN TĨNH" : "QUIET ZONE",
+        targetScore: 330,
+        duration: 25, // Reduced from 40
+        rules: {
+          minLength: 5,
+          excludeChar: isVi ? 't' : 's',
+          description: isVi ? "Dài > 4 & KHÔNG có 'T'" : "Length > 4 & NO 'S'",
+        },
+        promptContext: ""
+      },
+      {
+        level: 12,
+        name: isVi ? "TINH THỂ LỎNG" : "LIQUID AETHER",
+        targetScore: 360,
+        duration: 25, // Reduced from 40
+        rules: {
+          includeChar: 'l',
+          excludeChar: isVi ? 'a' : 'e',
+          description: isVi ? "Chứa 'L' & KHÔNG có 'A'" : "Has 'L' & NO 'E'",
+        },
+        promptContext: ""
+      },
+      {
+        level: 13,
+        name: isVi ? "TRỌNG LỰC LỚN" : "HEAVY GRAVITY",
+        targetScore: 400,
+        duration: 35, // Reduced from 50
+        rules: {
+          minLength: 8,
+          description: isVi ? "TỪ RẤT DÀI (> 7 ký tự)" : "VERY LONG (> 7 chars)",
+        },
+        promptContext: ""
+      },
+      {
+        level: 14,
+        name: isVi ? "BÃO MẶT TRỜI" : "SOLAR STORM",
+        targetScore: 450,
+        duration: 30, // Reduced from 45
+        rules: {
+          minLength: 7,
+          includeChar: isVi ? 'u' : 'r',
+          description: isVi ? "Dài > 6 & Chứa 'U'" : "Length > 6 & Contains 'R'",
+        },
+        promptContext: ""
+      },
+      {
+        level: 15,
+        name: isVi ? "CHÂN TRỜI SỰ KIỆN" : "EVENT HORIZON",
+        targetScore: 600,
+        duration: 25, // Reduced from 45
+        rules: {
+          minLength: 7,
+          includeChar: 'o',
+          excludeChar: isVi ? 'n' : 'e',
+          description: isVi ? "Dài > 6, Chứa 'O', KO 'N'" : "Length > 6, Has 'O', NO 'E'",
+        },
+        promptContext: ""
       }
     ];
 };

@@ -57,9 +57,10 @@ export const SignalWordItem: React.FC<Props> = ({ word, onDragEnd, isVietnamese 
       onDragEnd={(event, info) => {
         setIsDragging(false);
         audioService.playDragEnd();
-        const element = event.target as HTMLElement;
-        const rect = element.getBoundingClientRect();
-        onDragEnd(word.id, rect.x + rect.width / 2, rect.y + rect.height / 2, 0);
+        // Use info.point (pointer position) for accurate drop detection.
+        // Relying on event.target.getBoundingClientRect() can be buggy if the target
+        // resolves to the container/body (center of screen) during rapid movements.
+        onDragEnd(word.id, info.point.x, info.point.y, 0);
       }}
       className={`
         absolute px-3 py-1.5
